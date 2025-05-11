@@ -1,0 +1,162 @@
+package dev.nstv.easing.symphony.animationspec
+
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.AnimationVector
+import androidx.compose.animation.core.AnimationVector2D
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.TwoWayConverter
+import androidx.compose.animation.core.VectorizedAnimationSpec
+import androidx.compose.animation.core.VectorizedFiniteAnimationSpec
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.util.lerp
+import kotlin.math.PI
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.exp
+import kotlin.math.hypot
+import kotlin.math.ln
+import kotlin.math.log10
+import kotlin.math.sin
+
+const val DefaultDurationInMillis = 1000
+
+enum class CustomOffsetAnimationSpec {
+    Spiral,
+    Drift,
+    Linear;
+
+    fun toAnimationSpec(): AnimationSpec<Offset> = when (this) {
+        Spiral -> SpiralLogAnimationSpec()
+        Drift -> DriftOffsetSpec()
+        Linear -> tween(easing = LinearEasing)
+    }
+
+    companion object {
+        fun getAnimationSpecMap(): Map<String, AnimationSpec<Offset>> =
+            entries.associate { it.name to it.toAnimationSpec() }
+    }
+}
+
+// --- SpiralSpec ---
+class SpiralLogAnimationSpec(
+    private val turns: Int = 4,
+    private val durationMillis: Int = 1000,
+    private val inverted: Boolean = false
+) : FiniteAnimationSpec<Offset> {
+
+    override fun <V : AnimationVector> vectorize(
+        converter: TwoWayConverter<Offset, V>
+    ): VectorizedFiniteAnimationSpec<V> {
+        @Suppress("UNCHECKED_CAST")
+        return SpiralLogVectorizedSpec2D(turns, durationMillis, inverted) as VectorizedFiniteAnimationSpec<V>
+    }
+}
+
+
+class SpiralLogVectorizedSpec2D(
+    private val spiralTurns: Int,
+    private val durationMillis: Int,
+    private val inverted: Boolean
+) : VectorizedFiniteAnimationSpec<AnimationVector2D> {
+
+    override val isInfinite: Boolean get() = false
+
+    override fun getDurationNanos(
+        initialValue: AnimationVector2D,
+        targetValue: AnimationVector2D,
+        initialVelocity: AnimationVector2D
+    ) = durationMillis * 1_000_000L
+
+    override fun getValueFromNanos(
+        playTimeNanos: Long,
+        initialValue: AnimationVector2D,
+        targetValue: AnimationVector2D,
+        initialVelocity: AnimationVector2D
+    ): AnimationVector2D {
+        val progress = (playTimeNanos / 1_000_000f).coerceIn(0f, durationMillis.toFloat()) / durationMillis
+
+        val startX = initialValue.v1
+        val startY = initialValue.v2
+        val endX = targetValue.v1
+        val endY = targetValue.v2
+
+        // Vector from end (center) to start
+        val dx = startX - endX
+        val dy = startY - endY
+
+        val r1 = hypot(dx, dy)
+        val theta1 = atan2(dy, dx)
+        val deltaTheta = (spiralTurns * 2f * PI).toFloat()
+        val theta2 = if (inverted) theta1 - deltaTheta else theta1 + deltaTheta
+
+        val r2 = 0.01f
+        val lnRRatio = ln(r1 / r2)
+        val b = lnRRatio / (theta1 - theta2)
+        val a = r1 / exp(b * theta1)
+
+        val t = theta1 + (theta2 - theta1) * progress
+        val r = a * exp(b * t)
+
+        val x = r * cos(t) + endX
+        val y = r * sin(t) + endY
+
+        return AnimationVector2D(x, y)
+    }
+
+    override fun getVelocityFromNanos(
+        playTimeNanos: Long,
+        initialValue: AnimationVector2D,
+        targetValue: AnimationVector2D,
+        initialVelocity: AnimationVector2D
+    ): AnimationVector2D {
+        val delta = 1_000_000L
+        val t1 = playTimeNanos
+        val t2 = (playTimeNanos + delta).coerceAtMost(getDurationNanos(initialValue, targetValue, initialVelocity))
+
+        val v1 = getValueFromNanos(t1, initialValue, targetValue, initialVelocity)
+        val v2 = getValueFromNanos(t2, initialValue, targetValue, initialVelocity)
+
+        return AnimationVector2D(
+            (v2.v1 - v1.v1) / (delta / 1_000_000f),
+            (v2.v2 - v1.v2) / (delta / 1_000_000f)
+        )
+    }
+}
+
+class DriftOffsetSpec(private val durationMillis: Int = 1000) : AnimationSpec<Offset> {
+    override fun <V : AnimationVector> vectorize(converter: TwoWayConverter<Offset, V>): VectorizedAnimationSpec<V> =
+        object : VectorizedAnimationSpec<V> {
+            override val isInfinite: Boolean = false
+            override fun getDurationNanos(
+                initialValue: V,
+                targetValue: V,
+                initialVelocity: V
+            ): Long = durationMillis * 1_000_000L
+
+            override fun getValueFromNanos(
+                playTimeNanos: Long,
+                initialValue: V,
+                targetValue: V,
+                initialVelocity: V
+            ): V {
+                val t = playTimeNanos / 1_000_000f / durationMillis
+                val driftT = t * 0.5f + sin(t * PI).toFloat() * 0.5f
+                val start = converter.convertFromVector(initialValue)
+                val end = converter.convertFromVector(targetValue)
+                val interpolated = Offset(
+                    lerp(start.x, end.x, driftT),
+                    lerp(start.y, end.y, driftT)
+                )
+                return converter.convertToVector(interpolated)
+            }
+
+            override fun getVelocityFromNanos(
+                playTimeNanos: Long,
+                initialValue: V,
+                targetValue: V,
+                initialVelocity: V
+            ): V = converter.convertToVector(Offset.Zero)
+        }
+}
