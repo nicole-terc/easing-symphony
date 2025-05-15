@@ -14,15 +14,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileNotFoundException
 import javax.sound.sampled.AudioSystem
 import kotlin.math.sqrt
 
 
 @Composable
 actual fun provideMusicReader(): MusicReader = remember { DesktopMusicReader() }
-
 
 class DesktopMusicReader : MusicReader {
     private val _amplitudeFlow = MutableStateFlow(0f)
@@ -34,8 +33,18 @@ class DesktopMusicReader : MusicReader {
     private var job: Job? = null
     private var clip: javax.sound.sampled.Clip? = null
 
-    override suspend fun loadFile(fileUri: String) = withContext(Dispatchers.IO) {
-        val audioInputStream = AudioSystem.getAudioInputStream(File(fileUri))
+    override suspend fun loadFile(filePath: String) {
+        val resourceStream = this::class.java.classLoader?.getResourceAsStream(filePath.substringAfter("!/"))
+            ?: throw FileNotFoundException("Resource not found: $filePath")
+
+        val tempFile = File.createTempFile("music", ".wav")
+        resourceStream.use { input ->
+            tempFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+
+        val audioInputStream = AudioSystem.getAudioInputStream(tempFile)
         val format = audioInputStream.format
         val bytesPerFrame = format.frameSize
         val buffer = ByteArray(4096 * bytesPerFrame)
@@ -44,8 +53,7 @@ class DesktopMusicReader : MusicReader {
         var bytesRead: Int
         while (audioInputStream.read(buffer).also { bytesRead = it } != -1) {
             for (i in 0 until bytesRead step 2) {
-                val sample =
-                    ((buffer[i + 1].toInt() shl 8) or (buffer[i].toInt() and 0xFF)).toShort()
+                val sample = ((buffer[i + 1].toInt() shl 8) or (buffer[i].toInt() and 0xFF)).toShort()
                 samples.add(sample / 32768f)
             }
         }
@@ -62,8 +70,9 @@ class DesktopMusicReader : MusicReader {
         frameBuffer = frames
 
         clip = AudioSystem.getClip().apply {
-            open(AudioSystem.getAudioInputStream(File(fileUri)))
+            open(AudioSystem.getAudioInputStream(tempFile))
         }
+        play()
     }
 
     override fun play() {
@@ -96,4 +105,3 @@ class DesktopMusicReader : MusicReader {
     }
 }
 
-// Assume fft(frame: FloatArray): FloatArray is defined elsewhere
