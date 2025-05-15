@@ -22,7 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -104,24 +103,27 @@ fun OffsetAnimationSpecScreen(
                 size = ballSize,
                 modifier = Modifier
                     .graphicsLayer {
-                        this.translationY = -offset.y
+                        this.translationY = offset.y
                         this.translationX = offset.x
                     }
-                    .align(Alignment.BottomStart)
+            )
+
+            val startDrawOffset = Offset(ballSizePxHalf, ballSizePxHalf)
+            val endDrawOffset = Offset(
+                theaterWidthPixels + ballSizePxHalf,
+                (theaterHeightPixels + ballSizePxHalf)
             )
 
             DrawAnimationSpecPath(
                 spec = selected,
-                from = Offset(ballSizePxHalf, -ballSizePxHalf),
-                to = Offset(
-                    theaterWidthPixels + ballSizePxHalf,
-                    -(theaterHeightPixels + ballSizePxHalf)
-                ),
+                from = if (trigger) startDrawOffset else endDrawOffset,
+                to = if (trigger) endDrawOffset else startDrawOffset,
                 steps = 100,
                 color = TileColor.LightGray,
-                modifier = Modifier.fillMaxSize().background(Color.Red.copy(alpha = 0.5f)).graphicsLayer{
-                    clip = false
-                }
+                modifier = Modifier.fillMaxSize()
+                    .background(Color.Red.copy(alpha = 0.5f)).graphicsLayer {
+                        clip = false
+                    }
             )
         }
     }
