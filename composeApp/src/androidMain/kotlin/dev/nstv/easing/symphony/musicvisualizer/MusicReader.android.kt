@@ -9,10 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import dev.nstv.easing.symphony.audio.fft
-import dev.nstv.easing.symphony.musicvisualizer.MusicReader.Companion.fftBins
-import dev.nstv.easing.symphony.musicvisualizer.MusicReader.Companion.frameDelayMillis
-import dev.nstv.easing.symphony.musicvisualizer.MusicReader.Companion.frameSize
-import dev.nstv.easing.symphony.musicvisualizer.MusicReader.Companion.sampleRate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -20,6 +16,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.sqrt
 
 
@@ -32,18 +29,18 @@ actual fun provideMusicReader(): MusicReader {
 
 class AndroidMusicReader(
     private val context: Context
-) : MusicReader {
+) : MusicReader() {
 
     private val _amplitudeFlow = MutableStateFlow(0f)
     private val _fftFlow = MutableStateFlow(FloatArray(fftBins))
     override val amplitudeFlow: Flow<Float> = _amplitudeFlow
     override val fftFlow: Flow<FloatArray> = _fftFlow
-
     private var player: MediaPlayer? = null
     private var frameBuffer = listOf<FloatArray>()
     private var job: Job? = null
 
-    override suspend fun loadFile(fileUri: String) {
+    override suspend fun loadFile(fileUri: String) = withContext(Dispatchers.IO) {
+        // Thank you for the removePrefix, LexiLabs! (https://github.com/LexiLabs-App/basic-sound/blob/main/basic-sound/src/androidMain/kotlin/app/lexilabs/basic/sound/AudioByte.kt)
         val assetPath = fileUri.removePrefix("file:///android_asset/")
         val afd = context.assets.openFd(assetPath)
 
@@ -121,7 +118,7 @@ class AndroidMusicReader(
             prepare()
             afdForPlayer.close()
         }
-        play()
+        super.loadFile(fileUri)
     }
 
     override fun play() {
@@ -140,19 +137,20 @@ class AndroidMusicReader(
                 delay(frameDelayMillis)
             }
         }
+        super.play()
     }
 
     override fun pause() {
         player?.pause()
         job?.cancel()
+        super.pause()
     }
 
     override fun stop() {
         player?.stop()
         player?.seekTo(0)
         job?.cancel()
+        super.stop()
     }
 }
-
-// Assume fft(frame: FloatArray): FloatArray is defined elsewhere
 

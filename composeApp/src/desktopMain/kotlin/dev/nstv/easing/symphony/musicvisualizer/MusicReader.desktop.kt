@@ -14,6 +14,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
 import javax.sound.sampled.AudioSystem
@@ -23,7 +24,7 @@ import kotlin.math.sqrt
 @Composable
 actual fun provideMusicReader(): MusicReader = remember { DesktopMusicReader() }
 
-class DesktopMusicReader : MusicReader {
+class DesktopMusicReader : MusicReader() {
     private val _amplitudeFlow = MutableStateFlow(0f)
     private val _fftFlow = MutableStateFlow(FloatArray(fftBins))
     override val amplitudeFlow: Flow<Float> = _amplitudeFlow
@@ -33,9 +34,9 @@ class DesktopMusicReader : MusicReader {
     private var job: Job? = null
     private var clip: javax.sound.sampled.Clip? = null
 
-    override suspend fun loadFile(filePath: String) {
-        val resourceStream = this::class.java.classLoader?.getResourceAsStream(filePath.substringAfter("!/"))
-            ?: throw FileNotFoundException("Resource not found: $filePath")
+    override suspend fun loadFile(fileUri: String)  = withContext(Dispatchers.IO){
+        val resourceStream = this::class.java.classLoader?.getResourceAsStream(fileUri.substringAfter("!/"))
+            ?: throw FileNotFoundException("Resource not found: $fileUri")
 
         val tempFile = File.createTempFile("music", ".wav")
         resourceStream.use { input ->
@@ -72,7 +73,7 @@ class DesktopMusicReader : MusicReader {
         clip = AudioSystem.getClip().apply {
             open(AudioSystem.getAudioInputStream(tempFile))
         }
-        play()
+        super.loadFile(fileUri)
     }
 
     override fun play() {
@@ -91,17 +92,20 @@ class DesktopMusicReader : MusicReader {
                 delay(frameDelayMillis)
             }
         }
+        super.play()
     }
 
     override fun pause() {
         clip?.stop()
         job?.cancel()
+        super.pause()
     }
 
     override fun stop() {
         clip?.stop()
         clip?.microsecondPosition = 0
         job?.cancel()
+        super.stop()
     }
 }
 

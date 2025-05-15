@@ -3,17 +3,12 @@ package dev.nstv.easing.symphony.musicvisualizer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import dev.nstv.easing.symphony.audio.fft
-import dev.nstv.easing.symphony.musicvisualizer.MusicReader.Companion.fftBins
-import dev.nstv.easing.symphony.musicvisualizer.MusicReader.Companion.frameDelayMillis
-import dev.nstv.easing.symphony.musicvisualizer.MusicReader.Companion.frameSize
-import dev.nstv.easing.symphony.musicvisualizer.MusicReader.Companion.sampleRate
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.get
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
-import kotlinx.cinterop.value
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -32,7 +27,7 @@ import kotlin.math.sqrt
 @Composable
 actual fun provideMusicReader(): MusicReader = remember { IOSMusicReader() }
 
-class IOSMusicReader : MusicReader {
+class IOSMusicReader : MusicReader() {
     private val _amplitudeFlow = MutableStateFlow(0f)
     private val _fftFlow = MutableStateFlow(FloatArray(fftBins))
     override val amplitudeFlow: Flow<Float> = _amplitudeFlow
@@ -43,8 +38,8 @@ class IOSMusicReader : MusicReader {
     private var job: Job? = null
 
     @OptIn(ExperimentalForeignApi::class)
-    override suspend fun loadFile(filePath: String) {
-        val url = NSURL(string = filePath)
+    override suspend fun loadFile(fileUri: String) {
+        val url = NSURL(string = fileUri)
         memScoped {
             val audioFile = AVAudioFile(url, null)
 
@@ -73,7 +68,7 @@ class IOSMusicReader : MusicReader {
         player = AVAudioPlayer(contentsOfURL = url, null).apply {
             prepareToPlay()
         }
-        play()
+        super.loadFile(fileUri)
     }
 
     override fun play() {
@@ -92,16 +87,19 @@ class IOSMusicReader : MusicReader {
                 delay(frameDelayMillis)
             }
         }
+        super.play()
     }
 
     override fun pause() {
         player.pause()
         job?.cancel()
+        super.pause()
     }
 
     override fun stop() {
         player.stop()
         player.currentTime = 0.0
         job?.cancel()
+        super.stop()
     }
 }

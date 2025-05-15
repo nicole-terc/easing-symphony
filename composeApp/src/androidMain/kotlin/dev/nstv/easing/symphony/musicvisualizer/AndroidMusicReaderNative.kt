@@ -9,7 +9,7 @@ import kotlin.math.sqrt
 
 class AndroidMusicReaderNative(
     private val context: Context
-) : MusicReader {
+) : MusicReader() {
     private var mediaPlayer: MediaPlayer? = null
     private var visualizer: Visualizer? = null
 
