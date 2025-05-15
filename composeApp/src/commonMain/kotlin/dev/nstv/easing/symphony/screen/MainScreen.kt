@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -24,16 +23,24 @@ import dev.nstv.easing.symphony.design.components.DropDownWithArrows
 import dev.nstv.easing.symphony.design.Grid
 import dev.nstv.easing.symphony.design.slidesBackground
 import dev.nstv.easing.symphony.screen.Screen.*
+import dev.nstv.easing.symphony.screen.animationspec.AnimationSpecScreen
+import dev.nstv.easing.symphony.screen.animationspec.EasingScreen
+import dev.nstv.easing.symphony.screen.animationspec.OffsetAnimationSpecScreen
+import dev.nstv.easing.symphony.screen.`fun`.LogSpiralScreen
+import dev.nstv.easing.symphony.screen.music.MusicVisualizerScreen
+import dev.nstv.easing.symphony.screen.music.SimpleMusicVisualizerScreen
 
 
 private enum class Screen {
     EASING,
     ANIMATION_SPEC,
     ANIMATION_SPEC_OFFSET,
+    SIMPLE_MUSIC_VISUALIZER,
     MUSIC_VISUALIZER,
     LOG_SPIRAL,
 }
-
+const val musicFileName = "nicmix.wav"
+const val musicFilePath = "files/$musicFileName"
 const val UseSlidesBackground = false
 
 @Composable
@@ -41,7 +48,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
     ) {
-        var selectedScreen by remember { mutableStateOf(ANIMATION_SPEC_OFFSET) }
+        var selectedScreen by remember { mutableStateOf(SIMPLE_MUSIC_VISUALIZER) }
 
         Column(
             modifier = Modifier
@@ -69,6 +76,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     EASING -> EasingScreen()
                     ANIMATION_SPEC -> AnimationSpecScreen()
                     MUSIC_VISUALIZER -> MusicVisualizerScreen()
+                    SIMPLE_MUSIC_VISUALIZER -> SimpleMusicVisualizerScreen()
                     ANIMATION_SPEC_OFFSET -> OffsetAnimationSpecScreen()
                     LOG_SPIRAL -> LogSpiralScreen()
                 }

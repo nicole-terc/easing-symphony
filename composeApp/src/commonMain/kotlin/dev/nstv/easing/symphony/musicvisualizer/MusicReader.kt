@@ -8,10 +8,17 @@ interface MusicReader {
     val amplitudeFlow: Flow<Float>
     val fftFlow: Flow<FloatArray>
 
-    suspend fun loadFile(filePath: String)
+    suspend fun loadFile(fileUri: String)
     fun play()
     fun pause()
     fun stop()
+
+    companion object {
+        const val frameSize: Int = 1024
+        const val frameDelayMillis: Long = 16L
+        const val sampleRate: Int = 44100
+        const val fftBins: Int = 64
+    }
 }
 
 @Composable
