@@ -14,6 +14,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import javax.sound.sampled.AudioSystem
 import kotlin.math.sqrt
@@ -22,47 +23,57 @@ import kotlin.math.sqrt
 @Composable
 actual fun provideMusicReader(): MusicReader = remember { DesktopMusicReader() }
 
-class DesktopMusicReader : MusicReader {
 
-    private lateinit var samples: FloatArray
+class DesktopMusicReader : MusicReader {
     private val _amplitudeFlow = MutableStateFlow(0f)
     private val _fftFlow = MutableStateFlow(FloatArray(fftBins))
-    private var job: Job? = null
-
     override val amplitudeFlow: Flow<Float> = _amplitudeFlow
     override val fftFlow: Flow<FloatArray> = _fftFlow
 
-    private var audioClip = AudioSystem.getClip()
+    private var frameBuffer = listOf<FloatArray>()
+    private var job: Job? = null
+    private var clip: javax.sound.sampled.Clip? = null
 
-    override suspend fun loadFile(fileUri: String) {
+    override suspend fun loadFile(fileUri: String) = withContext(Dispatchers.IO) {
         val audioInputStream = AudioSystem.getAudioInputStream(File(fileUri))
         val format = audioInputStream.format
         val bytesPerFrame = format.frameSize
         val buffer = ByteArray(4096 * bytesPerFrame)
-        val pcmSamples = mutableListOf<Float>()
+        val samples = mutableListOf<Float>()
 
         var bytesRead: Int
         while (audioInputStream.read(buffer).also { bytesRead = it } != -1) {
             for (i in 0 until bytesRead step 2) {
                 val sample =
                     ((buffer[i + 1].toInt() shl 8) or (buffer[i].toInt() and 0xFF)).toShort()
-                pcmSamples.add(sample / 32768f)
+                samples.add(sample / 32768f)
             }
         }
-        samples = pcmSamples.toFloatArray()
-        audioClip = AudioSystem.getClip().apply {
+
+        val tempBuffer = mutableListOf<Float>()
+        val frames = mutableListOf<FloatArray>()
+        for (sample in samples) {
+            tempBuffer.add(sample)
+            if (tempBuffer.size >= frameSize) {
+                frames.add(tempBuffer.take(frameSize).toFloatArray())
+                tempBuffer.subList(0, frameSize).clear()
+            }
+        }
+        frameBuffer = frames
+
+        clip = AudioSystem.getClip().apply {
             open(AudioSystem.getAudioInputStream(File(fileUri)))
         }
     }
 
     override fun play() {
-        audioClip.start()
+        clip?.start()
         job = CoroutineScope(Dispatchers.Default).launch {
-            while (audioClip.isRunning) {
-                val currentSample =
-                    (audioClip.microsecondPosition / 1_000_000.0 * sampleRate).toInt()
-                if (currentSample + frameSize <= samples.size) {
-                    val frame = samples.copyOfRange(currentSample, currentSample + frameSize)
+            while (clip?.isRunning == true) {
+                val currentSample = (clip!!.microsecondPosition / 1_000_000.0 * sampleRate).toInt()
+                val currentFrame = currentSample / frameSize
+                val frame = frameBuffer.getOrNull(currentFrame)
+                if (frame != null) {
                     val amplitude = sqrt(frame.map { it * it }.sum() / frame.size)
                     val fft = frame.fft()
                     _amplitudeFlow.value = amplitude
@@ -74,13 +85,13 @@ class DesktopMusicReader : MusicReader {
     }
 
     override fun pause() {
-        audioClip.stop()
+        clip?.stop()
         job?.cancel()
     }
 
     override fun stop() {
-        audioClip.stop()
-        audioClip.microsecondPosition = 0
+        clip?.stop()
+        clip?.microsecondPosition = 0
         job?.cancel()
     }
 }

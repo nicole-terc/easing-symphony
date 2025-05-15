@@ -28,33 +28,28 @@ import platform.Foundation.NSError
 import platform.Foundation.NSURL
 import kotlin.math.sqrt
 
+
 @Composable
 actual fun provideMusicReader(): MusicReader = remember { IOSMusicReader() }
 
 class IOSMusicReader : MusicReader {
-    private lateinit var player: AVAudioPlayer
-    private lateinit var samples: FloatArray
     private val _amplitudeFlow = MutableStateFlow(0f)
     private val _fftFlow = MutableStateFlow(FloatArray(fftBins))
-
     override val amplitudeFlow: Flow<Float> = _amplitudeFlow
     override val fftFlow: Flow<FloatArray> = _fftFlow
 
+    private lateinit var player: AVAudioPlayer
+    private var frameBuffer = listOf<FloatArray>()
     private var job: Job? = null
 
     @OptIn(ExperimentalForeignApi::class)
-    override suspend fun loadFile(fileUri: String) {
-        val url = NSURL.fileURLWithPath(fileUri)
+    override suspend fun loadFile(filePath: String) {
+        val url = NSURL(string = filePath)
         memScoped {
-            val error = alloc<ObjCObjectVar<NSError?>>()
-            val audioFile = AVAudioFile(forReading = url, error = error.ptr)
-            if (error.value != null) {
-                throw IllegalStateException("Failed to open audio files: ${'$'}{error.value?.localizedDescription}")
-            }
+            val audioFile = AVAudioFile(url, null)
 
             val format = audioFile.processingFormat
             val frameCount = audioFile.length.toUInt()
-
             val buffer = AVAudioPCMBuffer(format, frameCount)!!
             val readError = alloc<ObjCObjectVar<NSError?>>()
             if (!audioFile.readIntoBuffer(buffer, error = readError.ptr)) {
@@ -63,25 +58,32 @@ class IOSMusicReader : MusicReader {
 
             val channelData = buffer.floatChannelData!![0]!!
             val length = buffer.frameLength.toInt()
-            samples = FloatArray(length)
+            val tempBuffer = mutableListOf<Float>()
+            val frames = mutableListOf<FloatArray>()
             for (i in 0 until length) {
-                samples[i] = channelData[i]
+                tempBuffer.add(channelData[i])
+                if (tempBuffer.size >= frameSize) {
+                    frames.add(tempBuffer.take(frameSize).toFloatArray())
+                    tempBuffer.subList(0, frameSize).clear()
+                }
             }
+            frameBuffer = frames
         }
 
         player = AVAudioPlayer(contentsOfURL = url, null).apply {
             prepareToPlay()
         }
+        play()
     }
 
     override fun play() {
         player.play()
         job = CoroutineScope(Dispatchers.Default).launch {
             while (player.playing) {
-                val currentTime = player.currentTime
-                val currentSample = (currentTime * sampleRate).toInt()
-                if (currentSample + frameSize <= samples.size) {
-                    val frame = samples.copyOfRange(currentSample, currentSample + frameSize)
+                val currentSample = (player.currentTime * sampleRate).toInt()
+                val currentFrame = currentSample / frameSize
+                val frame = frameBuffer.getOrNull(currentFrame)
+                if (frame != null) {
                     val amplitude = sqrt(frame.map { it * it }.sum() / frame.size)
                     val fft = frame.fft()
                     _amplitudeFlow.value = amplitude
