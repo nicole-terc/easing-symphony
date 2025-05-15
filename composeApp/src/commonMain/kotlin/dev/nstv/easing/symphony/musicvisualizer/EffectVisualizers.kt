@@ -21,6 +21,7 @@ enum class VisualizerType {
     Scrolling,
     CenteredBars,
     Curved,
+    CurvedMirrored,
     Circular;
 }
 
@@ -49,11 +50,13 @@ fun EffectVisualizer(
     visualizerType: VisualizerType = VisualizerType.Simple,
     gradientColors: List<Color> = Neon.getColors()
 ) {
+
     when (visualizerType) {
         VisualizerType.Simple -> SimpleVisualizer(fft, modifier, gradientColors)
         VisualizerType.Scrolling -> EfficientScrollingVisualizer(fft, modifier, gradientColors)
         VisualizerType.CenteredBars -> CenteredBarsVisualizer(fft, modifier, gradientColors)
         VisualizerType.Curved -> CurvedVisualizer(fft, modifier, gradientColors)
+        VisualizerType.CurvedMirrored -> MirroredCurvedVisualizer(fft, modifier, gradientColors)
         VisualizerType.Circular -> CircularVisualizer(fft, modifier, gradientColors)
     }
 }
@@ -68,7 +71,7 @@ fun SimpleVisualizer(
     Canvas(modifier = modifier.fillMaxSize()) {
         val barWidth = size.width / fft.size
         fft.forEachIndexed { i, value ->
-            val height = (value * size.height * 5).coerceIn(0f, size.height)
+            val height = (value * size.height).coerceIn(0f, size.height)
             drawRect(
                 brush = gradientColors?.let { Brush.verticalGradient(it) } ?: SolidColor(color),
                 topLeft = Offset(i * barWidth, size.height - height),
@@ -155,20 +158,28 @@ fun CurvedVisualizer(
     fft: FloatArray,
     modifier: Modifier = Modifier,
     gradientColors: List<Color>? = null,
-    color: Color = defaultColor
+    color: Color = Color.Cyan,
+    amplitudeScale: Float = 50.0f // as % of canvas height
 ) {
-    val pointCount = 128
+    val pointCount = fft.size
     val target = remember { FloatArray(pointCount) }
     val current = remember { FloatArray(pointCount) }
     val fftSnapshot = rememberUpdatedState(fft.copyOf())
 
     LaunchedEffect(Unit) {
         while (true) {
+            val snapshot = fftSnapshot.value
+            val max = snapshot.maxOrNull()?.takeIf { it > 0f } ?: 1f
+
             val normalized = FloatArray(pointCount) { i ->
-                fftSnapshot.value.getOrNull(i)?.coerceIn(0f, 1f) ?: 0f
+                (snapshot.getOrNull(i)?.coerceIn(0f, 1f) ?: 0f) / max
             }
-            for (i in 0 until pointCount - 1) target[i] = target[i + 1]
+
+            for (i in 0 until pointCount - 1) {
+                target[i] = target[i + 1]
+            }
             target[pointCount - 1] = normalized.lastOrNull() ?: 0f
+
             delay(16)
         }
     }
@@ -176,17 +187,19 @@ fun CurvedVisualizer(
     Canvas(modifier.fillMaxSize()) {
         val widthPerPoint = size.width / (pointCount - 1)
         val centerY = size.height / 2f
+        val verticalScale = (size.height / 2f) * amplitudeScale
+
         for (i in 0 until pointCount) {
             current[i] = lerp(current[i], target[i], 0.2f)
         }
 
         val path = Path().apply {
-            moveTo(0f, centerY)
+            moveTo(0f, centerY - current[0] * verticalScale)
             for (i in 1 until pointCount) {
                 val x1 = (i - 1) * widthPerPoint
                 val x2 = i * widthPerPoint
-                val y1 = centerY - (current[i - 1] - 0.5f) * size.height
-                val y2 = centerY - (current[i] - 0.5f) * size.height
+                val y1 = centerY - current[i - 1] * verticalScale
+                val y2 = centerY - current[i] * verticalScale
                 val midX = (x1 + x2) / 2
                 val midY = (y1 + y2) / 2
                 quadraticBezierTo(x1, y1, midX, midY)
@@ -201,6 +214,83 @@ fun CurvedVisualizer(
         )
     }
 }
+
+@Composable
+fun MirroredCurvedVisualizer(
+    fft: FloatArray,
+    modifier: Modifier = Modifier,
+    gradientColors: List<Color>? = null,
+    color: Color = Color.Cyan,
+    amplitudeScale: Float = 45f,
+) {
+    val pointCount = fft.size
+    val target = remember { FloatArray(pointCount) }
+    val current = remember { FloatArray(pointCount) }
+    val fftSnapshot = rememberUpdatedState(fft.copyOf())
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            val snapshot = fftSnapshot.value
+            val max = snapshot.maxOrNull()?.takeIf { it > 0f } ?: 1f
+
+            val normalized = FloatArray(pointCount) { i ->
+                (snapshot.getOrNull(i)?.coerceIn(0f, 1f) ?: 0f) / max
+            }
+
+            for (i in 0 until pointCount - 1) {
+                target[i] = target[i + 1]
+            }
+            target[pointCount - 1] = normalized.lastOrNull() ?: 0f
+
+            delay(16)
+        }
+    }
+
+    Canvas(modifier.fillMaxSize()) {
+        val widthPerPoint = size.width / (pointCount - 1)
+        val centerY = size.height / 2f
+        val verticalScale = (size.height / 2f) * amplitudeScale
+
+        for (i in 0 until pointCount) {
+            current[i] = lerp(current[i], target[i], 0.2f)
+        }
+
+        // Top half path
+        val topPath = Path().apply {
+            moveTo(0f, centerY - current[0] * verticalScale)
+            for (i in 1 until pointCount) {
+                val x1 = (i - 1) * widthPerPoint
+                val x2 = i * widthPerPoint
+                val y1 = centerY - current[i - 1] * verticalScale
+                val y2 = centerY - current[i] * verticalScale
+                val midX = (x1 + x2) / 2
+                val midY = (y1 + y2) / 2
+                quadraticBezierTo(x1, y1, midX, midY)
+            }
+        }
+
+        // Bottom half (mirrored)
+        val bottomPath = Path().apply {
+            moveTo(0f, centerY + current[0] * verticalScale)
+            for (i in 1 until pointCount) {
+                val x1 = (i - 1) * widthPerPoint
+                val x2 = i * widthPerPoint
+                val y1 = centerY + current[i - 1] * verticalScale
+                val y2 = centerY + current[i] * verticalScale
+                val midX = (x1 + x2) / 2
+                val midY = (y1 + y2) / 2
+                quadraticBezierTo(x1, y1, midX, midY)
+            }
+        }
+
+        val brush = gradientColors?.let { Brush.horizontalGradient(it) } ?: SolidColor(color)
+
+        drawPath(topPath, brush = brush, style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round))
+        drawPath(bottomPath, brush = brush, style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round))
+    }
+}
+
+
 
 @Composable
 fun CircularVisualizer(
