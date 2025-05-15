@@ -1,18 +1,19 @@
 package dev.nstv.easing.symphony.musicvisualizer
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.nstv.easing.symphony.extensions.nextItemLoop
 import dev.nstv.easing.symphony.musicvisualizer.MusicReader.Companion.fftBins
 import dev.nstv.easing.symphony.util.DisposableEffectWithLifecycle
 import kotlinx.coroutines.launch
@@ -38,6 +39,7 @@ fun SimpleMusicVisualizer(
     val fftData by musicReader.fftFlow.collectAsStateWithLifecycle(FloatArray(fftBins))
     val fileLoaded by musicReader.isReady.collectAsStateWithLifecycle()
     val isPlaying by musicReader.isPlaying.collectAsStateWithLifecycle()
+    var visualizerType by remember { mutableStateOf(VisualizerType.Simple) }
 
     LaunchedEffect(fileLoaded) {
         if (fileLoaded) {
@@ -51,19 +53,19 @@ fun SimpleMusicVisualizer(
         onResume = { musicReader.play() }
     )
 
-    Canvas(
+    Box(
         modifier = modifier.fillMaxSize().combinedClickable(
-            onDoubleClick = { if (isPlaying) musicReader.pause() else musicReader.play() },
-        ) {}
-    ) {
-        val barWidth = size.width / fftData.size
-        fftData.forEachIndexed { i, value ->
-            val height = (value * size.height * 5).coerceIn(0f, size.height)
-            drawRect(
-                color = Color.Cyan,
-                topLeft = Offset(i * barWidth, size.height - height),
-                size = Size(barWidth * 0.8f, height)
-            )
+            onDoubleClick = {
+                visualizerType = VisualizerType.entries.nextItemLoop(visualizerType)
+            },
+        ) {
+            if (isPlaying) musicReader.pause() else musicReader.play()
         }
+    ) {
+        EffectVisualizer(
+            fft = fftData,
+            modifier = Modifier.fillMaxSize(),
+            visualizerType = visualizerType,
+        )
     }
 }
