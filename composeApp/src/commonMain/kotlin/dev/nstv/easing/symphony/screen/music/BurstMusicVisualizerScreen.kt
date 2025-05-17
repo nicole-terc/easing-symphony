@@ -11,7 +11,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import dev.nstv.easing.symphony.design.components.DropDownWithArrows
-import dev.nstv.easing.symphony.musicvisualizer.EffectVisualizer
+import dev.nstv.easing.symphony.musicvisualizer.BursMusicVisualizer
+import dev.nstv.easing.symphony.musicvisualizer.BurstVisualizerType
 import dev.nstv.easing.symphony.musicvisualizer.MusicPlayer
 import dev.nstv.easing.symphony.musicvisualizer.VisualizerType
 import dev.nstv.easing.symphony.screen.musicFilePath
@@ -20,15 +21,16 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @OptIn(ExperimentalResourceApi::class, ExperimentalFoundationApi::class)
 @Composable
-fun SimpleMusicVisualizerScreen(
+fun BurstMusicVisualizerScreen(
     modifier: Modifier = Modifier,
 ) {
     MusicPlayer(
         fileUri = Res.getUri(musicFilePath),
-        playOnLoad = false,
+        normalized = true,
+        playOnLoad = true,
     ) { fftData, togglePlayback ->
 
-        var visualizerType by remember { mutableStateOf(VisualizerType.Simple) }
+        var visualizerType by remember { mutableStateOf(BurstVisualizerType.entries.first()) }
 
         Column(
             modifier = modifier.fillMaxSize().combinedClickable(
@@ -37,10 +39,10 @@ fun SimpleMusicVisualizerScreen(
         ) {
             DropDownWithArrows(
                 options = VisualizerType.entries.map { it.name },
-                onSelectionChanged = { visualizerType = VisualizerType.entries[it] },
+                onSelectionChanged = { visualizerType = BurstVisualizerType.entries[it] },
                 loopSelection = true,
             )
-            EffectVisualizer(
+            BursMusicVisualizer(
                 fft = fftData,
                 modifier = Modifier.fillMaxSize(),
                 visualizerType = visualizerType,

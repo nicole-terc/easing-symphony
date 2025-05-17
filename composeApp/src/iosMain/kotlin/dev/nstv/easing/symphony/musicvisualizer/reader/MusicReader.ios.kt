@@ -1,8 +1,7 @@
-package dev.nstv.easing.symphony.musicvisualizer
+package dev.nstv.easing.symphony.musicvisualizer.reader
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import dev.nstv.easing.symphony.audio.fft
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.alloc
@@ -25,9 +24,9 @@ import kotlin.math.sqrt
 
 
 @Composable
-actual fun provideMusicReader(): MusicReader = remember { IOSMusicReader() }
+actual fun provideMusicReader(normalized: Boolean): MusicReader = remember { IOSMusicReader(normalized) }
 
-class IOSMusicReader : MusicReader() {
+class IOSMusicReader(normalized: Boolean) : MusicReader(normalized) {
     private val _amplitudeFlow = MutableStateFlow(0f)
     private val _fftFlow = MutableStateFlow(FloatArray(fftBins))
     override val amplitudeFlow: Flow<Float> = _amplitudeFlow
@@ -80,7 +79,7 @@ class IOSMusicReader : MusicReader() {
                 val frame = frameBuffer.getOrNull(currentFrame)
                 if (frame != null) {
                     val amplitude = sqrt(frame.map { it * it }.sum() / frame.size)
-                    val fft = frame.fft()
+                    val fft = frame.getFft()
                     _amplitudeFlow.value = amplitude
                     _fftFlow.value = fft.take(fftBins).toFloatArray()
                 }

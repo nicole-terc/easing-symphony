@@ -1,12 +1,7 @@
-package dev.nstv.easing.symphony.musicvisualizer
+package dev.nstv.easing.symphony.musicvisualizer.reader
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import dev.nstv.easing.symphony.audio.fft
-import dev.nstv.easing.symphony.musicvisualizer.MusicReader.Companion.fftBins
-import dev.nstv.easing.symphony.musicvisualizer.MusicReader.Companion.frameDelayMillis
-import dev.nstv.easing.symphony.musicvisualizer.MusicReader.Companion.frameSize
-import dev.nstv.easing.symphony.musicvisualizer.MusicReader.Companion.sampleRate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -22,9 +17,12 @@ import kotlin.math.sqrt
 
 
 @Composable
-actual fun provideMusicReader(): MusicReader = remember { DesktopMusicReader() }
+actual fun provideMusicReader(normalized: Boolean): MusicReader =
+    remember { DesktopMusicReader(normalized) }
 
-class DesktopMusicReader : MusicReader() {
+class DesktopMusicReader(
+    normalized: Boolean,
+) : MusicReader(normalized) {
     private val _amplitudeFlow = MutableStateFlow(0f)
     private val _fftFlow = MutableStateFlow(FloatArray(fftBins))
     override val amplitudeFlow: Flow<Float> = _amplitudeFlow
@@ -34,9 +32,10 @@ class DesktopMusicReader : MusicReader() {
     private var job: Job? = null
     private var clip: javax.sound.sampled.Clip? = null
 
-    override suspend fun loadFile(fileUri: String)  = withContext(Dispatchers.IO){
-        val resourceStream = this::class.java.classLoader?.getResourceAsStream(fileUri.substringAfter("!/"))
-            ?: throw FileNotFoundException("Resource not found: $fileUri")
+    override suspend fun loadFile(fileUri: String) = withContext(Dispatchers.IO) {
+        val resourceStream =
+            this::class.java.classLoader?.getResourceAsStream(fileUri.substringAfter("!/"))
+                ?: throw FileNotFoundException("Resource not found: $fileUri")
 
         val tempFile = File.createTempFile("music", ".wav")
         resourceStream.use { input ->
@@ -54,7 +53,8 @@ class DesktopMusicReader : MusicReader() {
         var bytesRead: Int
         while (audioInputStream.read(buffer).also { bytesRead = it } != -1) {
             for (i in 0 until bytesRead step 2) {
-                val sample = ((buffer[i + 1].toInt() shl 8) or (buffer[i].toInt() and 0xFF)).toShort()
+                val sample =
+                    ((buffer[i + 1].toInt() shl 8) or (buffer[i].toInt() and 0xFF)).toShort()
                 samples.add(sample / 32768f)
             }
         }
@@ -85,7 +85,7 @@ class DesktopMusicReader : MusicReader() {
                 val frame = frameBuffer.getOrNull(currentFrame)
                 if (frame != null) {
                     val amplitude = sqrt(frame.map { it * it }.sum() / frame.size)
-                    val fft = frame.fft()
+                    val fft = frame.getFft()
                     _amplitudeFlow.value = amplitude
                     _fftFlow.value = fft.take(fftBins).toFloatArray()
                 }

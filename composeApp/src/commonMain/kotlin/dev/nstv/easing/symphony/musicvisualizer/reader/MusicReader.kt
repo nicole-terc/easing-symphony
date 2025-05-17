@@ -1,4 +1,4 @@
-package dev.nstv.easing.symphony.musicvisualizer
+package dev.nstv.easing.symphony.musicvisualizer.reader
 
 import androidx.annotation.CallSuper
 import androidx.compose.runtime.Composable
@@ -8,7 +8,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 
-abstract class MusicReader {
+abstract class MusicReader(
+    private val normalized: Boolean,
+) {
     abstract val amplitudeFlow: Flow<Float>
     abstract val fftFlow: Flow<FloatArray>
     private val _isReady = MutableStateFlow(false)
@@ -19,13 +21,21 @@ abstract class MusicReader {
     val isPlaying: StateFlow<Boolean>
         get() = _isPlaying.asStateFlow()
 
-    open suspend fun loadFile(fileUri: String){
+    open suspend fun loadFile(fileUri: String) {
         fileLoaded()
     }
 
     protected fun fileLoaded() {
         _isReady.value = true
     }
+
+    protected fun FloatArray.getFft(): FloatArray =
+        if (normalized) {
+            this.fftNormalizedLog10InPlace()
+        } else {
+            this.fft()
+        }
+
 
     @CallSuper
     open fun play() {
@@ -51,4 +61,4 @@ abstract class MusicReader {
 }
 
 @Composable
-expect fun provideMusicReader(): MusicReader
+expect fun provideMusicReader(normalized: Boolean): MusicReader

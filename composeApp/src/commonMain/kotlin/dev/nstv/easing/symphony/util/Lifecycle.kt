@@ -63,13 +63,15 @@ fun DisposableEffectWithLifecycle(
     key: Any? = Unit,
     onPause: () -> Unit = {},
     onResume: () -> Unit = {},
+    onDestroy: () -> Unit = {},
 ) {
     var onResumeToggle by remember { mutableStateOf(false) }
 
     observeLifecycle(
         key = Unit,
         onPause = { onPause() },
-        onResume = { onResumeToggle = !onResumeToggle }
+        onResume = { onResumeToggle = !onResumeToggle },
+        onDestroy = { onDestroy() }
     )
 
     DisposableEffect(onResumeToggle, key) {

@@ -1,4 +1,4 @@
-package dev.nstv.easing.symphony.musicvisualizer
+package dev.nstv.easing.symphony.musicvisualizer.reader
 
 import android.content.Context
 import android.media.MediaCodec
@@ -8,7 +8,6 @@ import android.media.MediaPlayer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import dev.nstv.easing.symphony.audio.fft
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -21,15 +20,16 @@ import kotlin.math.sqrt
 
 
 @Composable
-actual fun provideMusicReader(): MusicReader {
+actual fun provideMusicReader(normalized: Boolean): MusicReader {
     val context = LocalContext.current
-    return remember { AndroidMusicReader(context) }
+    return remember { AndroidMusicReader(context, normalized) }
 }
 
 
 class AndroidMusicReader(
-    private val context: Context
-) : MusicReader() {
+    private val context: Context,
+    normalized: Boolean
+) : MusicReader(normalized) {
 
     private val _amplitudeFlow = MutableStateFlow(0f)
     private val _fftFlow = MutableStateFlow(FloatArray(fftBins))
@@ -124,15 +124,20 @@ class AndroidMusicReader(
     override fun play() {
         player?.start()
         job = CoroutineScope(Dispatchers.Default).launch {
+            println("PLAY STARTED")
             while (player?.isPlaying == true) {
+                println("PLAYING")
                 val currentTime = player!!.currentPosition
                 val currentFrame = ((currentTime / 1000.0) * sampleRate / frameSize).toInt()
                 val frame = frameBuffer.getOrNull(currentFrame)
                 if (frame != null) {
+                    println("FRAME FOUND")
                     val amplitude = sqrt(frame.map { it * it }.sum() / frame.size)
-                    val fft = frame.fft()
+                    val fft = frame.getFft()
                     _amplitudeFlow.value = amplitude
                     _fftFlow.value = fft.take(fftBins).toFloatArray()
+                } else {
+                    println("FRAME NOT FOUND")
                 }
                 delay(frameDelayMillis)
             }

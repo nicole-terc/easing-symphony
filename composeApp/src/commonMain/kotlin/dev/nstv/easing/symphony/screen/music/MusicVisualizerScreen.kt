@@ -4,11 +4,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import dev.nstv.easing.symphony.musicvisualizer.provideMusicReader
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.nstv.easing.symphony.musicvisualizer.reader.provideMusicReader
 import dev.nstv.easing.symphony.musicvisualizer.MusicVisualizer
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
@@ -19,9 +22,16 @@ import kotlin.math.sin
 @Composable
 fun MusicVisualizerScreen(modifier: Modifier = Modifier) {
     val scope = rememberCoroutineScope()
-    val musicReader = provideMusicReader()
+    val musicReader = provideMusicReader(false)
     val amplitudeFlow = remember { musicReader.amplitudeFlow }
     val fftFlow = remember { musicReader.fftFlow }
+    val isReady by musicReader.isReady.collectAsStateWithLifecycle(false)
+
+    LaunchedEffect(isReady) {
+        if (isReady) {
+            musicReader.play()
+        }
+    }
 
     val waveformFlow = remember {
         // Use amplitudeFlow to fake a waveform if not available

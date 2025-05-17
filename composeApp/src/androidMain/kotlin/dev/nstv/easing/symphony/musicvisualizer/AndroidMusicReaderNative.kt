@@ -3,13 +3,15 @@ package dev.nstv.easing.symphony.musicvisualizer
 import android.content.Context
 import android.media.MediaPlayer
 import android.media.audiofx.Visualizer
+import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.math.sqrt
 
 class AndroidMusicReaderNative(
-    private val context: Context
-) : MusicReader() {
+    private val context: Context,
+    normalized: Boolean = false
+) : MusicReader(normalized) {
     private var mediaPlayer: MediaPlayer? = null
     private var visualizer: Visualizer? = null
 

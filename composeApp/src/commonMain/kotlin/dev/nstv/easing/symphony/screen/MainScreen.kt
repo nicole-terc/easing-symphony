@@ -29,6 +29,7 @@ import dev.nstv.easing.symphony.screen.animationspec.AnimationSpecScreen
 import dev.nstv.easing.symphony.screen.animationspec.EasingScreen
 import dev.nstv.easing.symphony.screen.animationspec.OffsetAnimationSpecScreen
 import dev.nstv.easing.symphony.screen.`fun`.LogSpiralScreen
+import dev.nstv.easing.symphony.screen.music.BurstMusicVisualizerScreen
 import dev.nstv.easing.symphony.screen.music.MusicVisualizerScreen
 import dev.nstv.easing.symphony.screen.music.SimpleMusicVisualizerScreen
 
@@ -38,6 +39,7 @@ private enum class Screen {
     ANIMATION_SPEC,
     ANIMATION_SPEC_OFFSET,
     SIMPLE_MUSIC_VISUALIZER,
+    BURST_MUSIC_VISUALIZER,
     MUSIC_VISUALIZER,
     LOG_SPIRAL,
 }
@@ -50,7 +52,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
     ) {
-        var selectedScreen by remember { mutableStateOf(SIMPLE_MUSIC_VISUALIZER) }
+        var selectedScreen by remember { mutableStateOf(BURST_MUSIC_VISUALIZER) }
 
         Column(
             modifier = Modifier
@@ -79,6 +81,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     ANIMATION_SPEC -> AnimationSpecScreen()
                     MUSIC_VISUALIZER -> MusicVisualizerScreen()
                     SIMPLE_MUSIC_VISUALIZER -> SimpleMusicVisualizerScreen()
+                    BURST_MUSIC_VISUALIZER -> BurstMusicVisualizerScreen()
                     ANIMATION_SPEC_OFFSET -> OffsetAnimationSpecScreen()
                     LOG_SPIRAL -> LogSpiralScreen()
                 }
