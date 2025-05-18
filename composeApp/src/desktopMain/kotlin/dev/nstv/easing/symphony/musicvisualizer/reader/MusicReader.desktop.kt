@@ -6,28 +6,23 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
 import javax.sound.sampled.AudioSystem
+import kotlin.math.abs
 import kotlin.math.sqrt
 
 
 @Composable
-actual fun provideMusicReader(normalized: Boolean): MusicReader =
-    remember { DesktopMusicReader(normalized) }
+actual fun provideMusicReader(normalized: Boolean, playOnLoad: Boolean): MusicReader =
+    remember { DesktopMusicReader(normalized, playOnLoad) }
 
 class DesktopMusicReader(
     normalized: Boolean,
-) : MusicReader(normalized) {
-    private val _amplitudeFlow = MutableStateFlow(0f)
-    private val _fftFlow = MutableStateFlow(FloatArray(FFT_BINS))
-    override val amplitudeFlow: Flow<Float> = _amplitudeFlow
-    override val fftFlow: Flow<FloatArray> = _fftFlow
-
+    playOnLoad: Boolean,
+) : MusicReader(normalized, playOnLoad) {
     private var frameBuffer = listOf<FloatArray>()
     private var job: Job? = null
     private var clip: javax.sound.sampled.Clip? = null
@@ -77,31 +72,54 @@ class DesktopMusicReader(
     }
 
     override fun play() {
+        if (clip?.isRunning == true) return
         clip?.start()
         job = CoroutineScope(Dispatchers.Default).launch {
             while (clip?.isRunning == true) {
-                val currentSample = (clip!!.microsecondPosition / 1_000_000.0 * SAMPLE_RATE).toInt()
-                val currentFrame = currentSample / FRAME_SIZE
-                val frame = frameBuffer.getOrNull(currentFrame)
-                if (frame != null) {
-                    val amplitude = sqrt(frame.map { it * it }.sum() / frame.size)
-                    val fft = frame.getFft()
-                    _amplitudeFlow.value = amplitude
-                    _fftFlow.value = fft.take(FFT_BINS).toFloatArray()
-                }
+                val currentTime = clip!!.microsecondPosition
+                updateFrame(currentTime.toInt())
                 delay(FRAME_DELAY_MILLIS)
             }
+            clearFlows()
         }
         super.play()
     }
 
+    private fun updateFrame(time: Int) {
+        val sampleAtTime = (time / 1_000_000.0 * SAMPLE_RATE).toInt()
+        val frameAtTime = sampleAtTime / FRAME_SIZE
+        val rawFrame = frameBuffer.getOrNull(frameAtTime)
+
+        if (rawFrame != null) {
+            val frame = if (normalized) {
+                val max = rawFrame.maxOfOrNull { v -> abs(v) }?.takeIf { it > 0f } ?: 1f
+                rawFrame.map { sample -> sample / max }.toFloatArray()
+            } else rawFrame
+
+
+            val amplitude = sqrt(frame.map { it * it }.sum() / frame.size)
+            val fft = frame.getFft()
+            _waveformFlow.value = frame
+            _amplitudeFlow.value = amplitude
+            _fftFlow.value = fft.take(FFT_BINS).toFloatArray()
+        } else {
+            clearFlows()
+        }
+    }
+
     override fun pause() {
+        if (clip?.isRunning == false) return
         clip?.stop()
         job?.cancel()
         super.pause()
     }
 
+    override fun seekTo(position: Long) {
+        clip?.microsecondPosition = position
+    }
+
     override fun stop() {
+        if (clip?.isRunning == false) return
         clip?.stop()
         clip?.microsecondPosition = 0
         job?.cancel()

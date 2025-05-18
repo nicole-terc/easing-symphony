@@ -21,16 +21,15 @@ fun MusicPlayer(
     ) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val musicReader = provideMusicReader(normalized)
+    val musicReader = provideMusicReader(normalized, playOnLoad)
     coroutineScope.launch { musicReader.loadFile(fileUri) }
 
-    MusicPlayerContent(musicReader, playOnLoad, frameContent)
+    MusicPlayerContent(musicReader, frameContent)
 }
 
 @Composable
 private fun MusicPlayerContent(
     musicReader: MusicReader,
-    playOnLoad: Boolean = true,
     frameContent: @Composable (
         fftData: FloatArray,
         amplitudeData: Float,
@@ -39,18 +38,7 @@ private fun MusicPlayerContent(
 ) {
     val fftData by musicReader.fftFlow.collectAsStateWithLifecycle(FloatArray(FFT_BINS))
     val amplitudeData by musicReader.amplitudeFlow.collectAsStateWithLifecycle(0f)
-    val fileLoaded by musicReader.isReady.collectAsStateWithLifecycle()
     val isPlaying by musicReader.isPlaying.collectAsStateWithLifecycle()
-
-    LaunchedEffect(fileLoaded) {
-        if (fileLoaded) {
-            println("FILE LOADED")
-            musicReader.play()
-            if (!playOnLoad) {
-                musicReader.pause()
-            }
-        }
-    }
 
     DisposableEffectWithLifecycle(
         musicReader,

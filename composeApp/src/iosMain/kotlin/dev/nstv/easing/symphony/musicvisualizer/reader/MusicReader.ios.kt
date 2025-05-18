@@ -12,25 +12,23 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import platform.AVFAudio.AVAudioFile
 import platform.AVFAudio.AVAudioPCMBuffer
 import platform.AVFAudio.AVAudioPlayer
 import platform.Foundation.NSError
+import platform.Foundation.NSTimeInterval
 import platform.Foundation.NSURL
+import kotlin.math.abs
 import kotlin.math.sqrt
 
 
 @Composable
-actual fun provideMusicReader(normalized: Boolean): MusicReader = remember { IOSMusicReader(normalized) }
+actual fun provideMusicReader(normalized: Boolean, playOnLoad: Boolean): MusicReader =
+    remember { IOSMusicReader(normalized, playOnLoad) }
 
-class IOSMusicReader(normalized: Boolean) : MusicReader(normalized) {
-    private val _amplitudeFlow = MutableStateFlow(0f)
-    private val _fftFlow = MutableStateFlow(FloatArray(FFT_BINS))
-    override val amplitudeFlow: Flow<Float> = _amplitudeFlow
-    override val fftFlow: Flow<FloatArray> = _fftFlow
+class IOSMusicReader(normalized: Boolean, playOnLoad: Boolean) :
+    MusicReader(normalized, playOnLoad) {
 
     private lateinit var player: AVAudioPlayer
     private var frameBuffer = listOf<FloatArray>()
@@ -74,25 +72,42 @@ class IOSMusicReader(normalized: Boolean) : MusicReader(normalized) {
         player.play()
         job = CoroutineScope(Dispatchers.Default).launch {
             while (player.playing) {
-                val currentSample = (player.currentTime * SAMPLE_RATE).toInt()
-                val currentFrame = currentSample / FRAME_SIZE
-                val frame = frameBuffer.getOrNull(currentFrame)
-                if (frame != null) {
-                    val amplitude = sqrt(frame.map { it * it }.sum() / frame.size)
-                    val fft = frame.getFft()
-                    _amplitudeFlow.value = amplitude
-                    _fftFlow.value = fft.take(FFT_BINS).toFloatArray()
-                }
+                updateFrame(player.currentTime)
                 delay(FRAME_DELAY_MILLIS)
             }
+            clearFlows()
         }
         super.play()
+    }
+
+    private fun updateFrame(time: NSTimeInterval) {
+        val currentSample = (time * SAMPLE_RATE).toInt()
+        val currentFrame = currentSample / FRAME_SIZE
+        val rawFrame = frameBuffer.getOrNull(currentFrame)
+
+        if (rawFrame != null) {
+            val frame = if (normalized) {
+                val max = rawFrame.maxOfOrNull { v -> abs(v) }?.takeIf { it > 0f } ?: 1f
+                rawFrame.map { sample -> sample / max }.toFloatArray()
+            } else rawFrame
+
+            val amplitude = sqrt(frame.map { it * it }.sum() / frame.size)
+            val fft = frame.getFft()
+            _amplitudeFlow.value = amplitude
+            _fftFlow.value = fft.take(FFT_BINS).toFloatArray()
+        } else {
+            clearFlows()
+        }
     }
 
     override fun pause() {
         player.pause()
         job?.cancel()
         super.pause()
+    }
+
+    override fun seekTo(position: Long) {
+        player.currentTime = position.toDouble() / 1000
     }
 
     override fun stop() {

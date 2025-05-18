@@ -14,6 +14,8 @@ import androidx.compose.ui.util.lerp
 import dev.nstv.easing.symphony.design.TileColor
 import dev.nstv.easing.symphony.musicvisualizer.GradientPresets.Neon
 import dev.nstv.easing.symphony.musicvisualizer.VisualizerType.*
+import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader
+import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader.Companion.FRAME_DELAY_MILLIS
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -144,6 +146,7 @@ fun EfficientScrollingVisualizerAnimatable(
     val animBars = remember { List(barCount) { Animatable(0f) } }
     val fftSnapshot = rememberUpdatedState(fft.copyOf())
     val scope = rememberCoroutineScope()
+    val animationTime = remember { (FRAME_DELAY_MILLIS * 0.75).toInt() }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -161,11 +164,14 @@ fun EfficientScrollingVisualizerAnimatable(
             scope.launch {
                 animBars[barCount - 1].animateTo(
                     newValue,
-                    animationSpec = tween(80, easing = LinearOutSlowInEasing)
+                    animationSpec = tween(
+                        durationMillis = animationTime,
+                        easing = LinearOutSlowInEasing
+                    )
                 )
             }
 
-            delay(80)
+            delay(FRAME_DELAY_MILLIS)
         }
     }
 
