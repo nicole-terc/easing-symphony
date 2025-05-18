@@ -1,7 +1,6 @@
 package dev.nstv.easing.symphony.musicvisualizer.reader
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -36,8 +35,8 @@ private fun MusicPlayerContent(
         togglePlayback: () -> Unit,
     ) -> Unit
 ) {
-    val fftData by musicReader.fftFlow.collectAsStateWithLifecycle(FloatArray(FFT_BINS))
-    val amplitudeData by musicReader.amplitudeFlow.collectAsStateWithLifecycle(0f)
+    val fftData by musicReader.frequencies.collectAsStateWithLifecycle(FloatArray(FFT_BINS))
+    val amplitudeData by musicReader.amplitude.collectAsStateWithLifecycle(0f)
     val isPlaying by musicReader.isPlaying.collectAsStateWithLifecycle()
 
     DisposableEffectWithLifecycle(

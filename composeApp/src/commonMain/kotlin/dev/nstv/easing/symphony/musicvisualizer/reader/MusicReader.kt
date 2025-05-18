@@ -12,12 +12,12 @@ abstract class MusicReader(
     protected val normalized: Boolean,
     private val playOnLoad: Boolean = true,
 ) {
-    protected val _waveformFlow = MutableStateFlow(FloatArray(MusicReader.FRAME_SIZE))
-    val waveformFlow: StateFlow<FloatArray> = _waveformFlow.asStateFlow()
+    protected val _waveformFlow = MutableStateFlow(FloatArray(FRAME_SIZE))
+    val waveform: StateFlow<FloatArray> = _waveformFlow.asStateFlow()
     protected val _amplitudeFlow = MutableStateFlow(0f)
-    val amplitudeFlow: StateFlow<Float> = _amplitudeFlow.asStateFlow()
+    val amplitude: StateFlow<Float> = _amplitudeFlow.asStateFlow()
     protected val _fftFlow = MutableStateFlow(FloatArray(FFT_BINS))
-    val fftFlow: StateFlow<FloatArray> = _fftFlow.asStateFlow()
+    val frequencies: StateFlow<FloatArray> = _fftFlow.asStateFlow()
     private val _isReady = MutableStateFlow(false)
     val isReady: StateFlow<Boolean> = _isReady.asStateFlow()
 
