@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import dev.nstv.easing.symphony.design.components.DropDownWithArrows
 import dev.nstv.easing.symphony.musicvisualizer.BursMusicVisualizer
 import dev.nstv.easing.symphony.musicvisualizer.BurstVisualizerType
-import dev.nstv.easing.symphony.musicvisualizer.MusicPlayer
+import dev.nstv.easing.symphony.musicvisualizer.reader.MusicPlayer
 import dev.nstv.easing.symphony.musicvisualizer.VisualizerType
 import dev.nstv.easing.symphony.screen.musicFilePath
 import easingsymphony.composeapp.generated.resources.Res
@@ -28,7 +28,7 @@ fun BurstMusicVisualizerScreen(
         fileUri = Res.getUri(musicFilePath),
         normalized = true,
         playOnLoad = true,
-    ) { fftData, togglePlayback ->
+    ) { fftData, amplitudeData, togglePlayback ->
 
         var visualizerType by remember { mutableStateOf(BurstVisualizerType.entries.first()) }
 

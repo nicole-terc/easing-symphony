@@ -12,7 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import dev.nstv.easing.symphony.design.components.DropDownWithArrows
 import dev.nstv.easing.symphony.musicvisualizer.EffectVisualizer
-import dev.nstv.easing.symphony.musicvisualizer.MusicPlayer
+import dev.nstv.easing.symphony.musicvisualizer.reader.MusicPlayer
 import dev.nstv.easing.symphony.musicvisualizer.VisualizerType
 import dev.nstv.easing.symphony.screen.musicFilePath
 import easingsymphony.composeapp.generated.resources.Res
@@ -26,7 +26,8 @@ fun SimpleMusicVisualizerScreen(
     MusicPlayer(
         fileUri = Res.getUri(musicFilePath),
         playOnLoad = false,
-    ) { fftData, togglePlayback ->
+        normalized = false,
+    ) { fftData, amplitudeData, togglePlayback ->
 
         var visualizerType by remember { mutableStateOf(VisualizerType.Simple) }
 

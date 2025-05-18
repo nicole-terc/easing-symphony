@@ -28,7 +28,7 @@ actual fun provideMusicReader(normalized: Boolean): MusicReader = remember { IOS
 
 class IOSMusicReader(normalized: Boolean) : MusicReader(normalized) {
     private val _amplitudeFlow = MutableStateFlow(0f)
-    private val _fftFlow = MutableStateFlow(FloatArray(fftBins))
+    private val _fftFlow = MutableStateFlow(FloatArray(FFT_BINS))
     override val amplitudeFlow: Flow<Float> = _amplitudeFlow
     override val fftFlow: Flow<FloatArray> = _fftFlow
 
@@ -56,9 +56,9 @@ class IOSMusicReader(normalized: Boolean) : MusicReader(normalized) {
             val frames = mutableListOf<FloatArray>()
             for (i in 0 until length) {
                 tempBuffer.add(channelData[i])
-                if (tempBuffer.size >= frameSize) {
-                    frames.add(tempBuffer.take(frameSize).toFloatArray())
-                    tempBuffer.subList(0, frameSize).clear()
+                if (tempBuffer.size >= FRAME_SIZE) {
+                    frames.add(tempBuffer.take(FRAME_SIZE).toFloatArray())
+                    tempBuffer.subList(0, FRAME_SIZE).clear()
                 }
             }
             frameBuffer = frames
@@ -74,16 +74,16 @@ class IOSMusicReader(normalized: Boolean) : MusicReader(normalized) {
         player.play()
         job = CoroutineScope(Dispatchers.Default).launch {
             while (player.playing) {
-                val currentSample = (player.currentTime * sampleRate).toInt()
-                val currentFrame = currentSample / frameSize
+                val currentSample = (player.currentTime * SAMPLE_RATE).toInt()
+                val currentFrame = currentSample / FRAME_SIZE
                 val frame = frameBuffer.getOrNull(currentFrame)
                 if (frame != null) {
                     val amplitude = sqrt(frame.map { it * it }.sum() / frame.size)
                     val fft = frame.getFft()
                     _amplitudeFlow.value = amplitude
-                    _fftFlow.value = fft.take(fftBins).toFloatArray()
+                    _fftFlow.value = fft.take(FFT_BINS).toFloatArray()
                 }
-                delay(frameDelayMillis)
+                delay(FRAME_DELAY_MILLIS)
             }
         }
         super.play()

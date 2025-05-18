@@ -1,13 +1,11 @@
-package dev.nstv.easing.symphony.musicvisualizer
+package dev.nstv.easing.symphony.musicvisualizer.reader
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader
-import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader.Companion.fftBins
-import dev.nstv.easing.symphony.musicvisualizer.reader.provideMusicReader
+import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader.Companion.FFT_BINS
 import dev.nstv.easing.symphony.util.DisposableEffectWithLifecycle
 import kotlinx.coroutines.launch
 
@@ -15,9 +13,10 @@ import kotlinx.coroutines.launch
 fun MusicPlayer(
     fileUri: String,
     playOnLoad: Boolean = true,
-    normalized: Boolean = false,
-    content: @Composable (
+    normalized: Boolean = true,
+    frameContent: @Composable (
         fftData: FloatArray,
+        amplitudeData: Float,
         togglePlayback: () -> Unit
     ) -> Unit
 ) {
@@ -25,19 +24,21 @@ fun MusicPlayer(
     val musicReader = provideMusicReader(normalized)
     coroutineScope.launch { musicReader.loadFile(fileUri) }
 
-    SimpleMusicVisualizerContent(musicReader, playOnLoad, content)
+    MusicPlayerContent(musicReader, playOnLoad, frameContent)
 }
 
 @Composable
-private fun SimpleMusicVisualizerContent(
+private fun MusicPlayerContent(
     musicReader: MusicReader,
     playOnLoad: Boolean = true,
-    content: @Composable (
+    frameContent: @Composable (
         fftData: FloatArray,
+        amplitudeData: Float,
         togglePlayback: () -> Unit,
     ) -> Unit
 ) {
-    val fftData by musicReader.fftFlow.collectAsStateWithLifecycle(FloatArray(fftBins))
+    val fftData by musicReader.fftFlow.collectAsStateWithLifecycle(FloatArray(FFT_BINS))
+    val amplitudeData by musicReader.amplitudeFlow.collectAsStateWithLifecycle(0f)
     val fileLoaded by musicReader.isReady.collectAsStateWithLifecycle()
     val isPlaying by musicReader.isPlaying.collectAsStateWithLifecycle()
 
@@ -45,7 +46,7 @@ private fun SimpleMusicVisualizerContent(
         if (fileLoaded) {
             println("FILE LOADED")
             musicReader.play()
-            if (!playOnLoad){
+            if (!playOnLoad) {
                 musicReader.pause()
             }
         }
@@ -57,8 +58,9 @@ private fun SimpleMusicVisualizerContent(
         onResume = { musicReader.play() }
     )
 
-    content(
-        fftData
+    frameContent(
+        fftData,
+        amplitudeData,
     ) {
         if (isPlaying) musicReader.pause() else musicReader.play()
     }

@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +28,7 @@ import dev.nstv.easing.symphony.screen.animationspec.EasingScreen
 import dev.nstv.easing.symphony.screen.animationspec.OffsetAnimationSpecScreen
 import dev.nstv.easing.symphony.screen.`fun`.LogSpiralScreen
 import dev.nstv.easing.symphony.screen.music.BurstMusicVisualizerScreen
-import dev.nstv.easing.symphony.screen.music.MusicVisualizerScreen
+import dev.nstv.easing.symphony.screen.music.MusicPropertiesScreen
 import dev.nstv.easing.symphony.screen.music.SimpleMusicVisualizerScreen
 
 
@@ -38,10 +36,10 @@ private enum class Screen {
     EASING,
     ANIMATION_SPEC,
     ANIMATION_SPEC_OFFSET,
+    LOG_SPIRAL,
+    MUSIC_PROPERTIES,
     SIMPLE_MUSIC_VISUALIZER,
     BURST_MUSIC_VISUALIZER,
-    MUSIC_VISUALIZER,
-    LOG_SPIRAL,
 }
 const val musicFileName = "nicmix.wav"
 const val musicFilePath = "files/$musicFileName"
@@ -52,7 +50,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
     ) {
-        var selectedScreen by remember { mutableStateOf(BURST_MUSIC_VISUALIZER) }
+        var selectedScreen by remember { mutableStateOf(MUSIC_PROPERTIES) }
 
         Column(
             modifier = Modifier
@@ -79,7 +77,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 when (screen) {
                     EASING -> EasingScreen()
                     ANIMATION_SPEC -> AnimationSpecScreen()
-                    MUSIC_VISUALIZER -> MusicVisualizerScreen()
+                    MUSIC_PROPERTIES -> MusicPropertiesScreen()
                     SIMPLE_MUSIC_VISUALIZER -> SimpleMusicVisualizerScreen()
                     BURST_MUSIC_VISUALIZER -> BurstMusicVisualizerScreen()
                     ANIMATION_SPEC_OFFSET -> OffsetAnimationSpecScreen()

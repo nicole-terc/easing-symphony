@@ -24,7 +24,7 @@ class DesktopMusicReader(
     normalized: Boolean,
 ) : MusicReader(normalized) {
     private val _amplitudeFlow = MutableStateFlow(0f)
-    private val _fftFlow = MutableStateFlow(FloatArray(fftBins))
+    private val _fftFlow = MutableStateFlow(FloatArray(FFT_BINS))
     override val amplitudeFlow: Flow<Float> = _amplitudeFlow
     override val fftFlow: Flow<FloatArray> = _fftFlow
 
@@ -63,9 +63,9 @@ class DesktopMusicReader(
         val frames = mutableListOf<FloatArray>()
         for (sample in samples) {
             tempBuffer.add(sample)
-            if (tempBuffer.size >= frameSize) {
-                frames.add(tempBuffer.take(frameSize).toFloatArray())
-                tempBuffer.subList(0, frameSize).clear()
+            if (tempBuffer.size >= FRAME_SIZE) {
+                frames.add(tempBuffer.take(FRAME_SIZE).toFloatArray())
+                tempBuffer.subList(0, FRAME_SIZE).clear()
             }
         }
         frameBuffer = frames
@@ -80,16 +80,16 @@ class DesktopMusicReader(
         clip?.start()
         job = CoroutineScope(Dispatchers.Default).launch {
             while (clip?.isRunning == true) {
-                val currentSample = (clip!!.microsecondPosition / 1_000_000.0 * sampleRate).toInt()
-                val currentFrame = currentSample / frameSize
+                val currentSample = (clip!!.microsecondPosition / 1_000_000.0 * SAMPLE_RATE).toInt()
+                val currentFrame = currentSample / FRAME_SIZE
                 val frame = frameBuffer.getOrNull(currentFrame)
                 if (frame != null) {
                     val amplitude = sqrt(frame.map { it * it }.sum() / frame.size)
                     val fft = frame.getFft()
                     _amplitudeFlow.value = amplitude
-                    _fftFlow.value = fft.take(fftBins).toFloatArray()
+                    _fftFlow.value = fft.take(FFT_BINS).toFloatArray()
                 }
-                delay(frameDelayMillis)
+                delay(FRAME_DELAY_MILLIS)
             }
         }
         super.play()

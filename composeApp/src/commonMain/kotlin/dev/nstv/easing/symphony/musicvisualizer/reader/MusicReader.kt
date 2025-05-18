@@ -53,10 +53,10 @@ abstract class MusicReader(
     }
 
     companion object {
-        const val frameSize: Int = 1024
-        const val frameDelayMillis: Long = 16L
-        const val sampleRate: Int = 44100
-        const val fftBins: Int = 64
+        const val FRAME_SIZE: Int = 1024
+        const val FRAME_DELAY_MILLIS: Long = 16L
+        const val SAMPLE_RATE: Int = 44100
+        const val FFT_BINS: Int = 64
     }
 }
 

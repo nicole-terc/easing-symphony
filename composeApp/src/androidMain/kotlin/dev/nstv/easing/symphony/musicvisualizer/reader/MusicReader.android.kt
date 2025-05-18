@@ -32,7 +32,7 @@ class AndroidMusicReader(
 ) : MusicReader(normalized) {
 
     private val _amplitudeFlow = MutableStateFlow(0f)
-    private val _fftFlow = MutableStateFlow(FloatArray(fftBins))
+    private val _fftFlow = MutableStateFlow(FloatArray(FFT_BINS))
     override val amplitudeFlow: Flow<Float> = _amplitudeFlow
     override val fftFlow: Flow<FloatArray> = _fftFlow
     private var player: MediaPlayer? = null
@@ -95,9 +95,9 @@ class AndroidMusicReader(
                     val sample =
                         ((chunk[i + 1].toInt() shl 8) or (chunk[i].toInt() and 0xFF)).toShort()
                     tempBuffer.add(sample / 32768f)
-                    if (tempBuffer.size >= frameSize) {
-                        (frameBuffer as MutableList).add(tempBuffer.take(frameSize).toFloatArray())
-                        tempBuffer.subList(0, frameSize).clear()
+                    if (tempBuffer.size >= FRAME_SIZE) {
+                        (frameBuffer as MutableList).add(tempBuffer.take(FRAME_SIZE).toFloatArray())
+                        tempBuffer.subList(0, FRAME_SIZE).clear()
                     }
                 }
             }
@@ -125,24 +125,29 @@ class AndroidMusicReader(
         player?.start()
         job = CoroutineScope(Dispatchers.Default).launch {
             println("PLAY STARTED")
-            while (player?.isPlaying == true) {
-                println("PLAYING")
-                val currentTime = player!!.currentPosition
-                val currentFrame = ((currentTime / 1000.0) * sampleRate / frameSize).toInt()
-                val frame = frameBuffer.getOrNull(currentFrame)
-                if (frame != null) {
-                    println("FRAME FOUND")
-                    val amplitude = sqrt(frame.map { it * it }.sum() / frame.size)
-                    val fft = frame.getFft()
-                    _amplitudeFlow.value = amplitude
-                    _fftFlow.value = fft.take(fftBins).toFloatArray()
-                } else {
-                    println("FRAME NOT FOUND")
+            player?.let { player ->
+                while (player.isPlaying) {
+                    println("PLAYING")
+                    updateFftFlow(player.currentPosition)
+                    delay(FRAME_DELAY_MILLIS)
                 }
-                delay(frameDelayMillis)
             }
         }
         super.play()
+    }
+
+    private fun updateFftFlow(time: Int) {
+        val frameAtTime = ((time / 1000.0) * SAMPLE_RATE / FRAME_SIZE).toInt()
+        val frame = frameBuffer.getOrNull(frameAtTime)
+        if (frame != null) {
+            println("FRAME FOUND")
+            val amplitude = sqrt(frame.map { it * it }.sum() / frame.size)
+            val fft = frame.getFft()
+            _amplitudeFlow.value = amplitude
+            _fftFlow.value = fft.take(FFT_BINS).toFloatArray()
+        } else {
+            println("FRAME NOT FOUND")
+        }
     }
 
     override fun pause() {
