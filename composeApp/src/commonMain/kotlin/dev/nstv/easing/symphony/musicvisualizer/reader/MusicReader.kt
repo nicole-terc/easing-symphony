@@ -33,7 +33,7 @@ abstract class MusicReader(
         // TODO: fix lost music context when play is not called after load
 //        play()
 //        pause()
-        if(playOnLoad){
+        if (playOnLoad) {
             delay(PLAY_DELAY)
             play()
         }
@@ -85,4 +85,4 @@ abstract class MusicReader(
 }
 
 @Composable
-expect fun provideMusicReader(normalized: Boolean, playOnLoad: Boolean): MusicReader
+expect fun provideMusicReader(normalized: Boolean = true, playOnLoad: Boolean = true): MusicReader

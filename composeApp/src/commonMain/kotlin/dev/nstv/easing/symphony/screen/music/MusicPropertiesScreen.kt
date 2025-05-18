@@ -30,13 +30,13 @@ import dev.nstv.easing.symphony.design.TileColor
 import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader.Companion.FFT_BINS
 import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReaderWrapper
 import dev.nstv.easing.symphony.screen.musicFilePath
-import dev.nstv.easing.symphony.util.generateSineWaveExponential
 import easingsymphony.composeapp.generated.resources.Res
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 const val amplitudeScale = 10f
+const val showAccumulatedWaveform = true
 
 @OptIn(ExperimentalResourceApi::class, ExperimentalFoundationApi::class)
 @Composable
@@ -50,35 +50,43 @@ fun MusicPropertiesScreen(
             fileUri = Res.getUri(musicFilePath),
         ) { musicReader ->
 
-            val fftData by musicReader.frequencies.collectAsStateWithLifecycle(FloatArray(FFT_BINS))
-            val amplitudeData by musicReader.amplitude.collectAsStateWithLifecycle(0f)
-            val waveformData by musicReader.waveform.collectAsStateWithLifecycle(FloatArray(0))
+            val isPlaying by musicReader.isPlaying.collectAsStateWithLifecycle()
+            val frequencies by musicReader.frequencies.collectAsStateWithLifecycle(
+                FloatArray(
+                    FFT_BINS
+                )
+            )
+            val amplitude by musicReader.amplitude.collectAsStateWithLifecycle(0f)
+            val waveform by musicReader.waveform.collectAsStateWithLifecycle(FloatArray(0))
             // Simulated sin wave
 //            val waveformData =
 //                generateSineWaveExponential(0.01f, 44100, 440f..1000f, 0.8f..1f).toMutableList()
 //            for (i in waveformData.size / 2 until waveformData.size / 2 + waveformData.size / 4) {
 //                waveformData.removeAt(i)
 //            }
-            val isPlaying by musicReader.isPlaying.collectAsStateWithLifecycle()
 
-//            val accumulatedWaveform = remember { mutableStateListOf<Float>() }
+            val accumulatedWaveform = remember { mutableStateListOf<Float>() }
             val accumulatedAmplitude = remember { mutableStateListOf<Float>() }
-            val bandMagnitudes = computeBandMagnitudes(fftData)
+            val bandMagnitudes = frequencies.computeBandMagnitudes()
 
-//            LaunchedEffect(waveformData) {
-//                waveformData.forEach {
-//                    accumulatedWaveform.add(it)
-//                }
-//            }
+            if (showAccumulatedWaveform) {
+                LaunchedEffect(waveform) {
+                    musicReader.pause()
+                    waveform.forEach {
+                        accumulatedWaveform.add(it)
+                    }
+                }
+            }
 
-            LaunchedEffect(amplitudeData) {
-                accumulatedAmplitude.add(amplitudeData)
+            LaunchedEffect(amplitude) {
+                accumulatedAmplitude.add(amplitude)
             }
 
             fun restartPlayback(keepPlaying: Boolean = false) {
                 // Restart
                 musicReader.stop()
                 accumulatedAmplitude.clear()
+                accumulatedWaveform.clear()
                 musicReader.seekTo(0L)
                 if (keepPlaying) {
                     coroutineScope.launch {
@@ -116,10 +124,10 @@ fun MusicPropertiesScreen(
                 Canvas(
                     modifier = Modifier.fillMaxWidth().weight(1f),
                 ) {
-                    val widthStep = size.width / waveformData.size
+                    val widthStep = size.width / waveform.size
                     val centerY = size.height / 2f
 
-                    val points = waveformData.mapIndexed { index, value ->
+                    val points = waveform.mapIndexed { index, value ->
                         Offset(
                             x = index * widthStep,
                             y = centerY - value * centerY
@@ -130,7 +138,7 @@ fun MusicPropertiesScreen(
                         color = TileColor.LightGray,
                         start = Offset(0f, size.height / 2),
                         end = Offset(size.width, size.height / 2),
-                        strokeWidth = 5f
+                        strokeWidth = 1f
                     )
 
                     drawPoints(
@@ -138,7 +146,7 @@ fun MusicPropertiesScreen(
                         pointMode = PointMode.Polygon,
                         cap = StrokeCap.Round,
                         color = TileColor.Green,
-                        strokeWidth = 10f,
+                        strokeWidth = 2f,
                     )
                 }
 
@@ -147,44 +155,46 @@ fun MusicPropertiesScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-//                Text(
-//                    text = "Waveform Accumulated",
-//                    modifier = Modifier.fillMaxWidth(),
-//                    style = MaterialTheme.typography.headlineMedium
-//                )
-//
-//                Canvas(
-//                    modifier = Modifier.fillMaxWidth().weight(1f),
-//                ) {
-//                    val centerY = size.height / 2f
-//
-//                    val points = accumulatedWaveform.mapIndexed { index, value ->
-//                        Offset(
-//                            x = index * (size.width / accumulatedWaveform.size),
-//                            y = centerY - value * centerY
-//                        )
-//                    }
-//
-//                    drawLine(
-//                        color = TileColor.LightGray,
-//                        start = Offset(0f, size.height / 2),
-//                        end = Offset(size.width, size.height / 2),
-//                        strokeWidth = 1f
-//                    )
-//
-//                    drawPoints(
-//                        points = points,
-//                        pointMode = PointMode.Polygon,
-//                        cap = StrokeCap.Round,
-//                        color = TileColor.Green,
-//                        strokeWidth = 2f,
-//                    )
-//                }
-//
-//                HorizontalDivider(
-//                    modifier = Modifier.fillMaxWidth().padding(vertical = Grid.One),
-//                    color = MaterialTheme.colorScheme.onSurfaceVariant
-//                )
+                if (showAccumulatedWaveform) {
+                    Text(
+                        text = "Waveform Accumulated",
+                        modifier = Modifier.fillMaxWidth(),
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+
+                    Canvas(
+                        modifier = Modifier.fillMaxWidth().weight(1f),
+                    ) {
+                        val centerY = size.height / 2f
+
+                        val points = accumulatedWaveform.mapIndexed { index, value ->
+                            Offset(
+                                x = index * (size.width / accumulatedWaveform.size),
+                                y = centerY - value * centerY
+                            )
+                        }
+
+                        drawLine(
+                            color = TileColor.LightGray,
+                            start = Offset(0f, size.height / 2),
+                            end = Offset(size.width, size.height / 2),
+                            strokeWidth = 1f
+                        )
+
+                        drawPoints(
+                            points = points,
+                            pointMode = PointMode.Polygon,
+                            cap = StrokeCap.Round,
+                            color = TileColor.Green,
+                            strokeWidth = 2f,
+                        )
+                    }
+
+                    HorizontalDivider(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = Grid.One),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
                 Text(
                     text = "Amplitude",
@@ -195,13 +205,11 @@ fun MusicPropertiesScreen(
                     Box(
                         Modifier.fillMaxHeight().weight(1f)
                     ) {
-                        Canvas(
-                            modifier.fillMaxSize(),
-                        ) {
+                        Canvas(Modifier.fillMaxSize()) {
                             val baseRadius = minOf(size.width, size.height) / 2
                             drawCircle(
                                 color = TileColor.Blue,
-                                radius = baseRadius * amplitudeData,
+                                radius = baseRadius * amplitude,
                                 style = Fill
                             )
                         }
@@ -257,11 +265,11 @@ fun MusicPropertiesScreen(
     }
 }
 
-fun computeBandMagnitudes(fft: FloatArray): List<Float> {
+fun FloatArray.computeBandMagnitudes(): List<Float> {
     val bands = listOf(
         0..2, 3..7, 8..15, 16..31, 32..63 //, 64..127, 128..minOf(255, fft.lastIndex)
     )
     return bands.map { range ->
-        fft.slice(range).average().toFloat()
+        this.slice(range).average().toFloat()
     }
 }

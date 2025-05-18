@@ -28,6 +28,7 @@ class DesktopMusicReader(
     private var clip: javax.sound.sampled.Clip? = null
 
     override suspend fun loadFile(fileUri: String) = withContext(Dispatchers.IO) {
+        // Thank you for the substring Pablo!: https://slack-chats.kotlinlang.org/t/26899194/has-anyone-achieved-getting-files-from-commonmain-composeres
         val resourceStream =
             this::class.java.classLoader?.getResourceAsStream(fileUri.substringAfter("!/"))
                 ?: throw FileNotFoundException("Resource not found: $fileUri")
