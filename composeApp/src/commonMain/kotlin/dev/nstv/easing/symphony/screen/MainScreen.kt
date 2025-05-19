@@ -27,6 +27,7 @@ import dev.nstv.easing.symphony.screen.animationspec.AnimationSpecScreen
 import dev.nstv.easing.symphony.screen.animationspec.EasingScreen
 import dev.nstv.easing.symphony.screen.animationspec.OffsetAnimationSpecScreen
 import dev.nstv.easing.symphony.screen.`fun`.LogSpiralScreen
+import dev.nstv.easing.symphony.screen.music.AdvancedAmplitudeVisualizersScreen
 import dev.nstv.easing.symphony.screen.music.AmplitudeVisualizersScreen
 import dev.nstv.easing.symphony.screen.music.BurstMusicVisualizerScreen
 import dev.nstv.easing.symphony.screen.music.MusicPropertiesScreen
@@ -42,7 +43,9 @@ private enum class Screen {
     SIMPLE_MUSIC_VISUALIZER,
     BURST_MUSIC_VISUALIZER,
     AMPLITUDE_VISUALIZER,
+    ADVANCED_AMPLITUDE_VISUALIZER,
 }
+
 const val musicFileName = "nicmix.wav"
 const val musicFilePath = "files/$musicFileName"
 const val UseSlidesBackground = false
@@ -52,7 +55,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
     ) {
-        var selectedScreen by remember { mutableStateOf(AMPLITUDE_VISUALIZER) }
+        var selectedScreen by remember { mutableStateOf(ADVANCED_AMPLITUDE_VISUALIZER) }
 
         Column(
             modifier = Modifier
@@ -85,6 +88,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     ANIMATION_SPEC_OFFSET -> OffsetAnimationSpecScreen()
                     LOG_SPIRAL -> LogSpiralScreen()
                     AMPLITUDE_VISUALIZER -> AmplitudeVisualizersScreen()
+                    ADVANCED_AMPLITUDE_VISUALIZER -> AdvancedAmplitudeVisualizersScreen()
                 }
             }
         }

@@ -23,8 +23,6 @@ import kotlin.math.hypot
 import kotlin.math.ln
 import kotlin.math.sin
 
-const val DefaultDurationInMillis = 1000
-
 enum class CustomOffsetAnimationSpec {
     CartesianSine,
     CartesianSineDecay,

@@ -12,6 +12,7 @@ object Grid {
     val Five = 40.dp
     val Six = 48.dp
     val Ten = 80.dp
+    val Fifteen = 120.dp
 
     val ShapeSize = 100.dp
 }

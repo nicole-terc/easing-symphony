@@ -1,7 +1,9 @@
 package dev.nstv.easing.symphony.screen.components
 
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateOffsetAsState
+import androidx.compose.animation.core.keyframes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -20,17 +22,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
-import dev.nstv.easing.symphony.animationspec.sineSpiralSpec
+import dev.nstv.easing.symphony.animationspec.easing.EaseOutBounce
+import dev.nstv.easing.symphony.animationspec.sineWaveSpec
 import dev.nstv.easing.symphony.design.Grid
+import dev.nstv.easing.symphony.design.TileColor
 import dev.nstv.easing.symphony.design.components.Ball
 import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader
-import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader.Companion.FRAME_SIZE
+import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader.Companion.FRAME_DELAY_MILLIS
 
 enum class AmplitudeBallType {
     Simple,
     Animated,
+    Keyframes,
+    KeyframesWithBounce,
     Sine,
 }
+
+const val AMPLITUDE_ANIMATION_DURATION = FRAME_DELAY_MILLIS.toInt()
 
 @Composable
 fun AmplitudeAnimation(
@@ -61,20 +69,57 @@ fun AmplitudeBallContainer(
     modifier: Modifier = Modifier,
     amplitudeBallType: AmplitudeBallType = AmplitudeBallType.Simple,
     ballSize: Dp = Grid.Ten,
+    ballColor: Color = TileColor.Blue,
+    durationInMillis: Int = AMPLITUDE_ANIMATION_DURATION,
 ) {
     var screenHeight by remember { mutableStateOf(0) }
 
     Box(
         modifier = modifier
             .fillMaxSize()
+            .background(color = Color.Transparent)
             .onGloballyPositioned {
                 screenHeight = it.size.height
             }
     ) {
         when (amplitudeBallType) {
-            AmplitudeBallType.Simple -> SimpleBall(amplitude, screenHeight, ballSize)
-            AmplitudeBallType.Animated -> AnimatedBall(amplitude, screenHeight, ballSize)
-            AmplitudeBallType.Sine -> SineBall(amplitude, screenHeight, ballSize)
+            AmplitudeBallType.Simple -> SimpleBall(
+                amplitude = amplitude,
+                screenHeight = screenHeight,
+                size = ballSize,
+                ballColor = ballColor
+            )
+
+            AmplitudeBallType.Animated -> AnimatedBall(
+                amplitude = amplitude,
+                screenHeight = screenHeight,
+                size = ballSize,
+                ballColor = ballColor,
+            )
+
+            AmplitudeBallType.Sine -> SineBall(
+                amplitude = amplitude,
+                screenHeight = screenHeight,
+                size = ballSize,
+                ballColor = ballColor,
+                durationInMillis = durationInMillis
+            )
+
+            AmplitudeBallType.Keyframes -> KeyframesBall(
+                amplitude = amplitude,
+                screenHeight = screenHeight,
+                size = ballSize,
+                ballColor = ballColor,
+                durationInMillis = durationInMillis
+            )
+
+            AmplitudeBallType.KeyframesWithBounce -> KeyframesWithBounceBall(
+                amplitude = amplitude,
+                screenHeight = screenHeight,
+                size = ballSize,
+                ballColor = ballColor,
+                durationInMillis = durationInMillis
+            )
         }
 
     }
@@ -85,10 +130,12 @@ fun BoxScope.SimpleBall(
     amplitude: Float,
     screenHeight: Int,
     size: Dp = Grid.Ten,
+    ballColor: Color = TileColor.Blue,
     modifier: Modifier = Modifier,
 ) {
     Ball(
         size = size,
+        color = ballColor,
         modifier = modifier
             .align(Alignment.BottomCenter)
             .graphicsLayer {
@@ -102,12 +149,74 @@ fun BoxScope.AnimatedBall(
     amplitude: Float,
     screenHeight: Int,
     size: Dp = Grid.Ten,
+    ballColor: Color = TileColor.Blue,
     modifier: Modifier = Modifier,
 ) {
     val translationY by animateFloatAsState(-amplitude * screenHeight)
 
     Ball(
         size = size,
+        color = ballColor,
+        modifier = modifier
+            .align(Alignment.BottomCenter)
+            .graphicsLayer {
+                this.translationY = translationY
+            },
+    )
+}
+
+@Composable
+fun BoxScope.KeyframesBall(
+    amplitude: Float,
+    screenHeight: Int,
+    size: Dp = Grid.Ten,
+    ballColor: Color = TileColor.Blue,
+    durationInMillis: Int = AMPLITUDE_ANIMATION_DURATION,
+    modifier: Modifier = Modifier,
+) {
+    val newTranslationY = -amplitude * screenHeight
+    val translationY by animateFloatAsState(
+        newTranslationY,
+        animationSpec = keyframes {
+            durationMillis = durationInMillis
+            0f atFraction .2f using LinearEasing
+        }
+    )
+
+    Ball(
+        size = size,
+        color = ballColor,
+        modifier = modifier
+            .align(Alignment.BottomCenter)
+            .graphicsLayer {
+                this.translationY = translationY
+            },
+    )
+}
+
+@Composable
+fun BoxScope.KeyframesWithBounceBall(
+    amplitude: Float,
+    screenHeight: Int,
+    size: Dp = Grid.Ten,
+    ballColor: Color = TileColor.Blue,
+    durationInMillis: Int = AMPLITUDE_ANIMATION_DURATION,
+    modifier: Modifier = Modifier,
+) {
+    val newTranslationY = -amplitude * screenHeight
+    val translationY by animateFloatAsState(
+        newTranslationY,
+        animationSpec = keyframes {
+            durationMillis = durationInMillis
+            0f atFraction .2f using LinearEasing
+            newTranslationY atFraction 1f using EaseOutBounce
+
+        }
+    )
+
+    Ball(
+        size = size,
+        color = ballColor,
         modifier = modifier
             .align(Alignment.BottomCenter)
             .graphicsLayer {
@@ -121,16 +230,19 @@ fun BoxScope.SineBall(
     amplitude: Float,
     screenHeight: Int,
     size: Dp = Grid.Ten,
+    ballColor: Color = TileColor.Blue,
+    durationInMillis: Int = AMPLITUDE_ANIMATION_DURATION,
     modifier: Modifier = Modifier,
 ) {
     val targetOffset = Offset(0f, -amplitude * screenHeight)
     val translation by animateOffsetAsState(
         targetOffset,
-        animationSpec = sineSpiralSpec(durationMillis = FRAME_SIZE)
+        animationSpec = sineWaveSpec(durationMillis = durationInMillis)
     )
 
     Ball(
         size = size,
+        color = ballColor,
         modifier = modifier
             .align(Alignment.BottomCenter)
             .graphicsLayer {

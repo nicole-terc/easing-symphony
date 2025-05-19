@@ -1,6 +1,7 @@
 package dev.nstv.easing.symphony.screen.animationspec
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -75,9 +76,9 @@ fun EasingScreen(
             onClick = {
                 coroutineScope.launch {
                     if (t.value == 1f) {
-                        t.animateTo(0f)
+                        t.animateTo(0f, tween(durationMillis = 2000))
                     } else {
-                        t.animateTo(1f)
+                        t.animateTo(1f, tween(durationMillis = 2000))
                     }
                 }
             }
