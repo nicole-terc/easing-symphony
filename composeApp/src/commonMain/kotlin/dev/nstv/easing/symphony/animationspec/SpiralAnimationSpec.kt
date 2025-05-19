@@ -168,41 +168,6 @@ fun wiggleSpiralSpec(
     }
 )
 
-fun logSpiralSpec(
-    cycles: Int = 3,
-    durationMillis: Int = DEFAULT_DURATION,
-    inverted: Boolean = false,
-    rStart: Float = 100f,
-    rEnd: Float = 0.01f
-): SpiralAnimationSpec {
-
-    val epsilon = 0.0001f
-
-    val safeRStart = rStart.coerceAtLeast(epsilon)
-    val safeREnd = rEnd.coerceAtLeast(epsilon)
-
-    val deltaTheta = cycles * 2f * PI.toFloat()
-    val thetaStart = 0f
-    val thetaEnd = if (inverted) thetaStart - deltaTheta else thetaStart + deltaTheta
-
-    val thetaDelta = (thetaEnd - thetaStart).takeIf { abs(it) >= epsilon } ?: epsilon
-
-    val lnRRatio = ln(safeRStart / safeREnd)
-    val b = lnRRatio / thetaDelta
-    val a = safeRStart / exp(b * thetaStart)
-
-    return SpiralAnimationSpec(
-        cycles = cycles,
-        durationMillis = durationMillis,
-        inverted = inverted,
-        radiusOffset = { progress, theta ->
-            val spiralR = a * exp(b * theta)
-            val baseR = safeRStart * (1 - progress)
-            spiralR - baseR
-        }
-    )
-}
-
 fun archimedeanSpiralSpec(
     cycles: Int = 4,
     durationMillis: Int = DEFAULT_DURATION,

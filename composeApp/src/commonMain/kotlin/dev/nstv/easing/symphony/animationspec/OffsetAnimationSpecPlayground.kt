@@ -5,9 +5,13 @@ import androidx.compose.animation.core.AnimationVector
 import androidx.compose.animation.core.AnimationVector2D
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.Spring.DampingRatioHighBouncy
+import androidx.compose.animation.core.Spring.StiffnessHigh
 import androidx.compose.animation.core.TwoWayConverter
 import androidx.compose.animation.core.VectorizedAnimationSpec
 import androidx.compose.animation.core.VectorizedFiniteAnimationSpec
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.util.lerp
@@ -31,35 +35,35 @@ enum class CustomOffsetAnimationSpec {
     SpiralArchimedean,
     SpiralFibonacci,
     SpiralWiggle,
-    Spiral,
     Drift,
-    Linear;
+    Tween,
+    Spring;
 
     fun toAnimationSpec(): AnimationSpec<Offset> = when (this) {
-        Spiral -> SpiralLogAnimationSpec()
         Drift -> DriftOffsetSpec()
-        Linear -> tween(easing = LinearEasing)
+        Tween -> tween(easing = LinearEasing)
+        Spring -> spring(dampingRatio = DampingRatioHighBouncy, stiffness = StiffnessHigh)
         CartesianSine -> sineWaveSpec()
         CartesianSineDecay -> sineWaveDecaySpec()
         CartesianJitter -> jitterySpec()
         SpiralSine -> sineSpiralSpec()
         SpiralSineCircle -> sineWaveCircleSpec()
-        SpiralLog -> logSpiralSpec()
+        SpiralLog -> SpiralLogAnimationSpec()
         SpiralArchimedean -> archimedeanSpiralSpec()
         SpiralFibonacci -> fibonacciSpiralSpec()
         SpiralWiggle -> wiggleSpiralSpec()
     }
 
     fun toInvertedAnimationSpec(): AnimationSpec<Offset> = when (this) {
-        Spiral -> SpiralLogAnimationSpec(inverted = true)
         Drift -> DriftOffsetSpec()
-        Linear -> tween(easing = LinearEasing)
+        Tween -> tween(easing = LinearEasing)
+        Spring -> spring(dampingRatio = DampingRatioHighBouncy, stiffness = StiffnessHigh)
         CartesianSine -> sineWaveSpec(inverted = true)
         CartesianSineDecay -> sineWaveDecaySpec(inverted = true)
         CartesianJitter -> jitterySpec(inverted = true)
         SpiralSine -> sineSpiralSpec(inverted = true)
         SpiralSineCircle -> sineWaveCircleSpec()
-        SpiralLog -> logSpiralSpec(inverted = true)
+        SpiralLog -> SpiralLogAnimationSpec(inverted = true)
         SpiralArchimedean -> archimedeanSpiralSpec(inverted = true)
         SpiralFibonacci -> fibonacciSpiralSpec(inverted = true)
         SpiralWiggle -> wiggleSpiralSpec(inverted = true)
@@ -206,5 +210,3 @@ class DriftOffsetSpec(private val durationMillis: Int = 1000) : AnimationSpec<Of
             ): V = converter.convertToVector(Offset.Zero)
         }
 }
-
-// Sine animationSpec
