@@ -1,8 +1,11 @@
 package dev.nstv.easing.symphony.musicvisualizer.reader
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader.Companion.FFT_BINS
 import dev.nstv.easing.symphony.util.DisposableEffectWithLifecycle
@@ -52,3 +55,30 @@ private fun MusicPlayerContent(
         if (isPlaying) musicReader.pause() else musicReader.play()
     }
 }
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun Modifier.musicPlayerControl(
+    musicReader: MusicReader,
+    onPlaybackRestarted: () -> Unit = {},
+): Modifier = this.combinedClickable(
+    onLongClick = {
+        musicReader.stop()
+        musicReader.seekTo(0L)
+        onPlaybackRestarted()
+        musicReader.play()
+    },
+    onDoubleClick = {
+        musicReader.stop()
+        musicReader.seekTo(0L)
+        onPlaybackRestarted()
+    },
+    onClick = {
+        if (musicReader.isPlaying.value) {
+            musicReader.pause()
+        } else {
+            musicReader.play()
+        }
+    }
+)
+

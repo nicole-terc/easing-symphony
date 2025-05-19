@@ -55,6 +55,7 @@ enum class GradientPresets {
 
 val defaultColor = TileColor.Pink
 val defaultAmplitud = 10f
+val animationTime = (FRAME_DELAY_MILLIS * 0.75).toInt()
 
 @Composable
 fun EffectVisualizer(
@@ -146,7 +147,7 @@ fun EfficientScrollingVisualizerAnimatable(
     val animBars = remember { List(barCount) { Animatable(0f) } }
     val fftSnapshot = rememberUpdatedState(fft.copyOf())
     val scope = rememberCoroutineScope()
-    val animationTime = remember { (FRAME_DELAY_MILLIS * 0.75).toInt() }
+
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -253,11 +254,11 @@ fun CenteredVisualizerAnimatable(
             scope.launch {
                 animBars[barCount - 1].animateTo(
                     newValue,
-                    animationSpec = tween(80, easing = LinearOutSlowInEasing)
+                    animationSpec = tween(animationTime, easing = LinearOutSlowInEasing)
                 )
             }
 
-            delay(80)
+            delay(FRAME_DELAY_MILLIS)
         }
     }
 

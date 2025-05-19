@@ -1,7 +1,6 @@
 package dev.nstv.easing.symphony.animationspec
 
 import androidx.compose.animation.core.*
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.util.lerp
 import kotlin.math.*
 import kotlin.random.Random

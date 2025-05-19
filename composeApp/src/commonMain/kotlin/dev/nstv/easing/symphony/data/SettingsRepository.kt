@@ -17,8 +17,9 @@ class SettingsRepository {
     private val settings: Settings by lazy { Settings() }
 
     fun getWindowSize(): DpSize {
-        val width = settings.getInt(SettingsKeys.windowWidth, 500)
-        val height = settings.getInt(SettingsKeys.windowHeight, 800)
+        // TODO: remove hardcoded sizing
+        val width = 450//settings.getInt(SettingsKeys.windowWidth, 500)
+        val height = 900 //settings.getInt(SettingsKeys.windowHeight, 800)
         return DpSize(width.dp, height.dp)
     }
 

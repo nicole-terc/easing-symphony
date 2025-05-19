@@ -2,7 +2,6 @@ package dev.nstv.easing.symphony.screen.music
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,16 +28,19 @@ import dev.nstv.easing.symphony.design.Grid
 import dev.nstv.easing.symphony.design.TileColor
 import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader.Companion.FFT_BINS
 import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReaderWrapper
+import dev.nstv.easing.symphony.musicvisualizer.reader.musicPlayerControl
 import dev.nstv.easing.symphony.screen.musicFilePath
 import easingsymphony.composeapp.generated.resources.Res
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 const val amplitudeScale = 10f
-const val showAccumulatedWaveform = true
 
-@OptIn(ExperimentalResourceApi::class, ExperimentalFoundationApi::class)
+// Current implementation is not-optimized
+const val showAccumulatedWaveform = false
+
+@OptIn(ExperimentalResourceApi::class, ExperimentalFoundationApi::class, ExperimentalTime::class)
 @Composable
 fun MusicPropertiesScreen(
     modifier: Modifier = Modifier,
@@ -71,7 +73,6 @@ fun MusicPropertiesScreen(
 
             if (showAccumulatedWaveform) {
                 LaunchedEffect(waveform) {
-                    musicReader.pause()
                     waveform.forEach {
                         accumulatedWaveform.add(it)
                     }
@@ -80,39 +81,24 @@ fun MusicPropertiesScreen(
 
             LaunchedEffect(amplitude) {
                 accumulatedAmplitude.add(amplitude)
+                println(
+                    "accumulatedAmplitude at ${
+                        Clock.System.now().toEpochMilliseconds()
+                    } size ${accumulatedAmplitude.size}: $accumulatedAmplitude"
+                )
+
             }
 
-            fun restartPlayback(keepPlaying: Boolean = false) {
-                // Restart
-                musicReader.stop()
+            fun restartPlayback() {
                 accumulatedAmplitude.clear()
                 accumulatedWaveform.clear()
-                musicReader.seekTo(0L)
-                if (keepPlaying) {
-                    coroutineScope.launch {
-                        delay(1000)
-                        musicReader.play()
-                    }
-                }
             }
 
             Column(
-                modifier = Modifier.fillMaxWidth()
-                    .combinedClickable(
-                        onLongClick = {
-                            restartPlayback(true)
-                        },
-                        onDoubleClick = {
-                            restartPlayback(false)
-                        },
-                        onClick = {
-                            if (isPlaying) {
-                                musicReader.pause()
-                            } else {
-                                musicReader.play()
-                            }
-                        }
-                    )
+                modifier = Modifier.fillMaxWidth().musicPlayerControl(
+                    musicReader = musicReader,
+                    onPlaybackRestarted = { restartPlayback() }
+                )
             ) {
 
                 Text(

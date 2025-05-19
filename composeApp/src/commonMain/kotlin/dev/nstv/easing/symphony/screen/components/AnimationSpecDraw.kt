@@ -52,7 +52,7 @@ fun DrawAnimationSpecPath(
         drawLine(
             start = from,
             end = to,
-            color = Color.Yellow,
+            color = TileColor.LightGray.copy(alpha = 0.8f),
             strokeWidth = 2f
         )
     }

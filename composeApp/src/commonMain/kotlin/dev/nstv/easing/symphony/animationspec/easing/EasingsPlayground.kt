@@ -3,15 +3,18 @@ package dev.nstv.easing.symphony.animationspec.easing
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.LinearEasing
 import kotlin.math.PI
+import kotlin.math.floor
 import kotlin.math.log10
 
 enum class CustomEasingType {
+    Stepper,
     Spiral,
     Log,
     Linear;
 
     fun getEasing(): Easing {
         return when (this) {
+            Stepper -> StepperEasing
             Spiral -> SpiralEasing
             Log -> LogEasing
             Linear -> LinearEasing
@@ -54,4 +57,12 @@ val SpiralEasing = Easing { t ->
         overshootAmplitude * kotlin.math.sin(frequency * t * PI).toFloat() * damping
 
     (logComponent + spiralComponent).coerceIn(0f, 1.2f)
+}
+
+fun stepperEasing(steps: Int = 5): Easing = Easing { fraction ->
+    floor(fraction * steps) / steps
+}
+
+val StepperEasing = Easing { fraction ->
+    floor(fraction * 5) / 5
 }

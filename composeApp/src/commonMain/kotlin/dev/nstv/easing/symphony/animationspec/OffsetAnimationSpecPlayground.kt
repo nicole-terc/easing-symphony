@@ -17,12 +17,20 @@ import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.hypot
 import kotlin.math.ln
-import kotlin.math.log10
 import kotlin.math.sin
 
 const val DefaultDurationInMillis = 1000
 
 enum class CustomOffsetAnimationSpec {
+    CartesianSine,
+    CartesianSineDecay,
+    CartesianJitter,
+    SpiralSine,
+    SpiralSineCircle,
+    SpiralLog,
+    SpiralArchimedean,
+    SpiralFibonacci,
+    SpiralWiggle,
     Spiral,
     Drift,
     Linear;
@@ -31,11 +39,38 @@ enum class CustomOffsetAnimationSpec {
         Spiral -> SpiralLogAnimationSpec()
         Drift -> DriftOffsetSpec()
         Linear -> tween(easing = LinearEasing)
+        CartesianSine -> sineWaveSpec()
+        CartesianSineDecay -> sineWaveDecaySpec()
+        CartesianJitter -> jitterySpec()
+        SpiralSine -> sineSpiralSpec()
+        SpiralSineCircle -> sineWaveCircleSpec()
+        SpiralLog -> logSpiralSpec()
+        SpiralArchimedean -> archimedeanSpiralSpec()
+        SpiralFibonacci -> fibonacciSpiralSpec()
+        SpiralWiggle -> wiggleSpiralSpec()
+    }
+
+    fun toInvertedAnimationSpec(): AnimationSpec<Offset> = when (this) {
+        Spiral -> SpiralLogAnimationSpec(inverted = true)
+        Drift -> DriftOffsetSpec()
+        Linear -> tween(easing = LinearEasing)
+        CartesianSine -> sineWaveSpec(inverted = true)
+        CartesianSineDecay -> sineWaveDecaySpec(inverted = true)
+        CartesianJitter -> jitterySpec(inverted = true)
+        SpiralSine -> sineSpiralSpec(inverted = true)
+        SpiralSineCircle -> sineWaveCircleSpec()
+        SpiralLog -> logSpiralSpec(inverted = true)
+        SpiralArchimedean -> archimedeanSpiralSpec(inverted = true)
+        SpiralFibonacci -> fibonacciSpiralSpec(inverted = true)
+        SpiralWiggle -> wiggleSpiralSpec(inverted = true)
     }
 
     companion object {
         fun getAnimationSpecMap(): Map<String, AnimationSpec<Offset>> =
             entries.associate { it.name to it.toAnimationSpec() }
+
+        fun getInvertedAnimationSpecMap(): Map<String, AnimationSpec<Offset>> =
+            entries.associate { it.name to it.toInvertedAnimationSpec() }
     }
 }
 
@@ -50,7 +85,11 @@ class SpiralLogAnimationSpec(
         converter: TwoWayConverter<Offset, V>
     ): VectorizedFiniteAnimationSpec<V> {
         @Suppress("UNCHECKED_CAST")
-        return SpiralLogVectorizedSpec2D(turns, durationMillis, inverted) as VectorizedFiniteAnimationSpec<V>
+        return SpiralLogVectorizedSpec2D(
+            turns,
+            durationMillis,
+            inverted
+        ) as VectorizedFiniteAnimationSpec<V>
     }
 }
 
@@ -75,7 +114,8 @@ class SpiralLogVectorizedSpec2D(
         targetValue: AnimationVector2D,
         initialVelocity: AnimationVector2D
     ): AnimationVector2D {
-        val progress = (playTimeNanos / 1_000_000f).coerceIn(0f, durationMillis.toFloat()) / durationMillis
+        val progress =
+            (playTimeNanos / 1_000_000f).coerceIn(0f, durationMillis.toFloat()) / durationMillis
 
         val startX = initialValue.v1
         val startY = initialValue.v2
@@ -113,7 +153,13 @@ class SpiralLogVectorizedSpec2D(
     ): AnimationVector2D {
         val delta = 1_000_000L
         val t1 = playTimeNanos
-        val t2 = (playTimeNanos + delta).coerceAtMost(getDurationNanos(initialValue, targetValue, initialVelocity))
+        val t2 = (playTimeNanos + delta).coerceAtMost(
+            getDurationNanos(
+                initialValue,
+                targetValue,
+                initialVelocity
+            )
+        )
 
         val v1 = getValueFromNanos(t1, initialValue, targetValue, initialVelocity)
         val v2 = getValueFromNanos(t2, initialValue, targetValue, initialVelocity)
@@ -160,3 +206,5 @@ class DriftOffsetSpec(private val durationMillis: Int = 1000) : AnimationSpec<Of
             ): V = converter.convertToVector(Offset.Zero)
         }
 }
+
+// Sine animationSpec

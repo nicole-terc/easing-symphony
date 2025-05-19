@@ -25,7 +25,6 @@ fun SimpleMusicVisualizerScreen(
 ) {
     MusicPlayer(
         fileUri = Res.getUri(musicFilePath),
-        playOnLoad = false,
         normalized = false,
     ) { fftData, amplitudeData, togglePlayback ->
 
