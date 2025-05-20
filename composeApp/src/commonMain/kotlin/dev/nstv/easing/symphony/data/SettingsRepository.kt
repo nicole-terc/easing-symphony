@@ -13,14 +13,18 @@ object SettingsKeys {
     const val windowY = "windowY"
 }
 
+val hardcodedPhoneSize = DpSize(450.dp, 900.dp)
+val hardcodedSlidesSize = DpSize(1350.dp, 900.dp)
+
 class SettingsRepository {
     private val settings: Settings by lazy { Settings() }
 
     fun getWindowSize(): DpSize {
         // TODO: remove hardcoded sizing
-        val width = 450//settings.getInt(SettingsKeys.windowWidth, 500)
-        val height = 900 //settings.getInt(SettingsKeys.windowHeight, 800)
-        return DpSize(width.dp, height.dp)
+//        val width = settings.getInt(SettingsKeys.windowWidth, 500)
+//        val height = settings.getInt(SettingsKeys.windowHeight, 800)
+//        return DpSize(width.dp, height.dp)
+        return hardcodedSlidesSize
     }
 
     fun saveWindowSize(size: DpSize) {

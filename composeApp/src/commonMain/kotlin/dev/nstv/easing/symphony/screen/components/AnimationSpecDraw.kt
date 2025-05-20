@@ -20,7 +20,9 @@ fun DrawAnimationSpecPath(
     to: Offset,
     steps: Int = 1000,
     color: Color = TileColor.LightGray,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showPath: Boolean = true,
+    showLine: Boolean = true,
 ) {
     val converter = Offset.VectorConverter
     val vectorizedSpec = spec.vectorize(converter)
@@ -30,30 +32,34 @@ fun DrawAnimationSpecPath(
     val durationNanos = vectorizedSpec.getDurationNanos(initialVec, targetVec, initialVelocity)
 
     Canvas(modifier = modifier) {
-        val path = Path()
+        if (showPath) {
+            val path = Path()
 
-        for (i in 0..steps) {
-            val t = (i / steps.toFloat()) * durationNanos
-            val vector =
-                vectorizedSpec.getValueFromNanos(
-                    t.toLong(),
-                    initialVec,
-                    targetVec,
-                    initialVelocity
-                )
-            val offset = converter.convertFromVector(vector)
+            for (i in 0..steps) {
+                val t = (i / steps.toFloat()) * durationNanos
+                val vector =
+                    vectorizedSpec.getValueFromNanos(
+                        t.toLong(),
+                        initialVec,
+                        targetVec,
+                        initialVelocity
+                    )
+                val offset = converter.convertFromVector(vector)
 
-            if (i == 0) path.moveTo(offset.x, offset.y)
-            else path.lineTo(offset.x, offset.y)
+                if (i == 0) path.moveTo(offset.x, offset.y)
+                else path.lineTo(offset.x, offset.y)
+            }
+
+            drawPath(path, color = color, style = Stroke(width = 2f))
         }
 
-        drawPath(path, color = color, style = Stroke(width = 2f))
-
-        drawLine(
-            start = from,
-            end = to,
-            color = TileColor.LightGray.copy(alpha = 0.8f),
-            strokeWidth = 2f
-        )
+        if (showLine) {
+            drawLine(
+                start = from,
+                end = to,
+                color = TileColor.LightGray.copy(alpha = 0.8f),
+                strokeWidth = 2f
+            )
+        }
     }
 }

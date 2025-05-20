@@ -32,6 +32,7 @@ import dev.nstv.easing.symphony.screen.music.AmplitudeVisualizersScreen
 import dev.nstv.easing.symphony.screen.music.BurstMusicVisualizerScreen
 import dev.nstv.easing.symphony.screen.music.MusicPropertiesScreen
 import dev.nstv.easing.symphony.screen.music.SimpleMusicVisualizerScreen
+import dev.nstv.easing.symphony.screen.showcase.AnimationSpecShowcaseScreen
 
 
 private enum class Screen {
@@ -44,18 +45,20 @@ private enum class Screen {
     BURST_MUSIC_VISUALIZER,
     AMPLITUDE_VISUALIZER,
     ADV_AMPLITUDE_VISUALIZER,
+    SHOWCASE_ANIMATION_SPEC,
 }
 
 const val musicFileName = "nicmix.wav"
 const val musicFilePath = "files/$musicFileName"
 const val UseSlidesBackground = false
+const val HideOptions = false
 
 @Composable
 fun MainScreen(modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
     ) {
-        var selectedScreen by remember { mutableStateOf(ADV_AMPLITUDE_VISUALIZER) }
+        var selectedScreen by remember { mutableStateOf(SHOWCASE_ANIMATION_SPEC) }
 
         Column(
             modifier = Modifier
@@ -75,7 +78,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
             )
             HorizontalDivider()
             Crossfade(
-                modifier = Modifier.padding(vertical = Grid.One, horizontal = Grid.Two),
+                modifier = Modifier.padding(vertical = Grid.Two, horizontal = Grid.Two),
                 targetState = selectedScreen,
                 animationSpec = tween(durationMillis = 500)
             ) { screen ->
@@ -89,6 +92,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     LOG_SPIRAL -> LogSpiralScreen()
                     AMPLITUDE_VISUALIZER -> AmplitudeVisualizersScreen()
                     ADV_AMPLITUDE_VISUALIZER -> AdvancedAmplitudeVisualizersScreen()
+                    SHOWCASE_ANIMATION_SPEC -> AnimationSpecShowcaseScreen()
                 }
             }
         }

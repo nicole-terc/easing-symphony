@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,13 +30,15 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import dev.nstv.easing.symphony.animationspec.CustomAnimationSpecType
 import dev.nstv.easing.symphony.animationspec.CustomOffsetAnimationSpec
 import dev.nstv.easing.symphony.design.Grid
 import dev.nstv.easing.symphony.design.TileColor
 import dev.nstv.easing.symphony.design.components.Ball
 import dev.nstv.easing.symphony.design.components.DropDownWithArrows
 import dev.nstv.easing.symphony.screen.components.DrawAnimationSpecPath
+
+private const val ShowPath = true
+private const val ShowLine = true
 
 @Composable
 fun OffsetAnimationSpecScreen(
@@ -120,15 +121,6 @@ fun AnimationSpecOffsetVisualizer(
                     }
                 }
     ) {
-        Ball(
-            size = ballSize,
-            modifier = Modifier
-                .graphicsLayer {
-                    this.translationY = offset.y
-                    this.translationX = offset.x
-                }
-        )
-
         val startDrawOffset = Offset(ballSizePxHalf, ballSizePxHalf)
         val endDrawOffset = Offset(
             theaterWidthPixels + ballSizePxHalf,
@@ -141,9 +133,21 @@ fun AnimationSpecOffsetVisualizer(
             to = if (animateBack && !trigger) startDrawOffset else endDrawOffset,
             steps = 100,
             color = TileColor.Pink,
+            showPath = ShowPath,
+            showLine = ShowLine,
             modifier = Modifier.fillMaxSize()
                 .graphicsLayer {
                     clip = false
+                }
+        )
+
+        Ball(
+            size = ballSize,
+            color = TileColor.Blue.copy(0.8f),
+            modifier = Modifier
+                .graphicsLayer {
+                    this.translationY = offset.y
+                    this.translationX = offset.x
                 }
         )
     }

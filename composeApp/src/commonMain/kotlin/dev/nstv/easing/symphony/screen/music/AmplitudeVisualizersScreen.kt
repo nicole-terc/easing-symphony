@@ -31,11 +31,12 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 fun AmplitudeVisualizersScreen(
     modifier: Modifier = Modifier,
 ) {
-    var ballType by remember { mutableStateOf(AmplitudeBallType.Keyframes) }
+    var ballType by remember { mutableStateOf(AmplitudeBallType.Simple) }
 
     Column(modifier = modifier.padding(Grid.One)) {
         MusicReaderWrapper(
             fileUri = Res.getUri(musicFilePath),
+            playOnLoad = false,
         ) { musicReader ->
             val amplitude by musicReader.amplitude.collectAsStateWithLifecycle(0f)
             val accumulatedAmplitude = remember { mutableStateListOf<Float>() }

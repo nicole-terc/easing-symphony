@@ -7,10 +7,13 @@ import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.Spring.DampingRatioHighBouncy
+import androidx.compose.animation.core.Spring.DampingRatioMediumBouncy
 import androidx.compose.animation.core.Spring.StiffnessHigh
+import androidx.compose.animation.core.Spring.StiffnessMedium
 import androidx.compose.animation.core.TwoWayConverter
 import androidx.compose.animation.core.VectorizedAnimationSpec
 import androidx.compose.animation.core.VectorizedFiniteAnimationSpec
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.geometry.Offset
@@ -35,12 +38,14 @@ enum class CustomOffsetAnimationSpec {
     SpiralWiggle,
     Drift,
     Tween,
-    Spring;
+    Spring,
+    Snap;
 
     fun toAnimationSpec(): AnimationSpec<Offset> = when (this) {
         Drift -> DriftOffsetSpec()
         Tween -> tween(easing = LinearEasing)
-        Spring -> spring(dampingRatio = DampingRatioHighBouncy, stiffness = StiffnessHigh)
+        Spring -> spring(dampingRatio = DampingRatioMediumBouncy, stiffness = StiffnessMedium)
+        Snap -> snap()
         CartesianSine -> sineWaveSpec()
         CartesianSineDecay -> sineWaveDecaySpec()
         CartesianJitter -> jitterySpec()
@@ -56,6 +61,7 @@ enum class CustomOffsetAnimationSpec {
         Drift -> DriftOffsetSpec()
         Tween -> tween(easing = LinearEasing)
         Spring -> spring(dampingRatio = DampingRatioHighBouncy, stiffness = StiffnessHigh)
+        Snap -> snap()
         CartesianSine -> sineWaveSpec(inverted = true)
         CartesianSineDecay -> sineWaveDecaySpec(inverted = true)
         CartesianJitter -> jitterySpec(inverted = true)

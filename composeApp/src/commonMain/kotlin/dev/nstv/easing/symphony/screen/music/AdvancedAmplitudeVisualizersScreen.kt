@@ -29,9 +29,13 @@ import dev.nstv.easing.symphony.musicvisualizer.reader.musicPlayerControl
 import dev.nstv.easing.symphony.screen.components.AmplitudeBallContainer
 import dev.nstv.easing.symphony.screen.components.AmplitudeBallType
 import dev.nstv.easing.symphony.screen.musicFilePath
+import dev.nstv.easing.symphony.util.getAlphaForPercentage
+import dev.nstv.easing.symphony.util.getColorForPercentage
+import dev.nstv.easing.symphony.util.getSizeForPercentage
 import easingsymphony.composeapp.generated.resources.Res
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.ceil
+import kotlin.math.min
 
 const val ShowOnlyOneBall = true
 
@@ -39,13 +43,14 @@ const val ShowOnlyOneBall = true
 @Composable
 fun AdvancedAmplitudeVisualizersScreen(
     modifier: Modifier = Modifier,
-    numberOfBalls: Int = 5,
+    numberOfBalls: Int = 3,
 ) {
-    var ballType by remember { mutableStateOf(AmplitudeBallType.Bounce) }
+    var ballType by remember { mutableStateOf(AmplitudeBallType.Simple) }
 
     Column(modifier = modifier.padding(Grid.One)) {
         MusicReaderWrapper(
             fileUri = Res.getUri(musicFilePath),
+            playOnLoad = false,
         ) { musicReader ->
             val amplitude by musicReader.amplitude.collectAsStateWithLifecycle(0f)
             val savedAmplitude by remember { mutableStateOf(FloatArray(numberOfBalls)) }
@@ -61,7 +66,9 @@ fun AdvancedAmplitudeVisualizersScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .musicPlayerControl(musicReader)
+                    .musicPlayerControl(musicReader) {
+                        savedAmplitude.fill(0f)
+                    }
             ) {
                 DropDownWithArrows(
                     modifier = Modifier.fillMaxWidth(),
@@ -75,9 +82,9 @@ fun AdvancedAmplitudeVisualizersScreen(
                 println("SAved Amplitude: ${savedAmplitude.toList()}")
                 Box(Modifier.border(width = 1.dp, color = TileColor.LightGray)) {
                     if (ShowOnlyOneBall) {
-                        val index = ceil(numberOfBalls / 2f).toInt()
+                        val index = min(ceil(numberOfBalls / 2f).toInt(), numberOfBalls - 1)
                         val itemAmplitude = savedAmplitude[index]
-                        val percentage = 1f - index.toFloat() / numberOfBalls
+                        val percentage = 1f
                         AmplitudeBallContainer(
                             amplitude = itemAmplitude,
                             amplitudeBallType = ballType,
@@ -110,23 +117,4 @@ fun AdvancedAmplitudeVisualizersScreen(
         }
     }
 }
-
-private fun getSizeForPercentage(
-    percentage: Float,
-    maxSize: Dp = Grid.Fifteen,
-    minSize: Dp = Grid.Four,
-) = lerp(minSize, maxSize, percentage)
-
-private fun getColorForPercentage(
-    percentage: Float,
-    maxColor: Color = TileColor.Blue,
-    minColor: Color = TileColor.Green,
-) = lerp(minColor, maxColor, percentage)
-
-
-private fun getAlphaForPercentage(
-    percentage: Float,
-    maxAlpha: Float = 0.9f,
-    minAlpha: Float = 0.2f,
-) = lerp(minAlpha, maxAlpha, percentage)
 

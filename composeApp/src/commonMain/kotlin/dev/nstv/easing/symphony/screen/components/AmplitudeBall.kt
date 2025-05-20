@@ -2,9 +2,11 @@ package dev.nstv.easing.symphony.screen.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateOffsetAsState
 import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -17,7 +19,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,22 +27,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
-import dev.nstv.easing.symphony.animationspec.easing.CustomEasingType.InBounce
 import dev.nstv.easing.symphony.animationspec.easing.EaseInBounce
 import dev.nstv.easing.symphony.animationspec.easing.EaseOutBounce
-import dev.nstv.easing.symphony.animationspec.easing.EaseOutBounceAdjusted
-import dev.nstv.easing.symphony.animationspec.easing.LogEasing
 import dev.nstv.easing.symphony.animationspec.sineWaveSpec
 import dev.nstv.easing.symphony.design.Grid
 import dev.nstv.easing.symphony.design.TileColor
 import dev.nstv.easing.symphony.design.components.Ball
 import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader
 import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader.Companion.FRAME_DELAY_MILLIS
-import kotlinx.coroutines.launch
 
 enum class AmplitudeBallType {
     Simple,
     Animated,
+    Tween,
+    Spring,
     Keyframes,
     KeyframesWithBounce,
     Sine,
@@ -57,6 +56,11 @@ fun AmplitudeAnimation(
     val amplitude by musicReader.amplitude.collectAsState()
     var screenHeight by remember { mutableStateOf(0) }
 
+    val translationY by animateFloatAsState(
+        targetValue = -amplitude * screenHeight,
+        animationSpec = tween()
+    )
+
     Box(
         Modifier.fillMaxSize()
             .onGloballyPositioned {
@@ -67,7 +71,7 @@ fun AmplitudeAnimation(
             Modifier
                 .background(color = Color.Blue, shape = CircleShape)
                 .graphicsLayer {
-                    translationY = -amplitude * screenHeight
+                    this.translationY = translationY
                 }
         )
     }
@@ -107,12 +111,19 @@ fun AmplitudeBallContainer(
                 ballColor = ballColor,
             )
 
-            AmplitudeBallType.Sine -> SineBall(
+            AmplitudeBallType.Tween -> TweenBall(
                 amplitude = amplitude,
                 screenHeight = screenHeight,
                 size = ballSize,
                 ballColor = ballColor,
                 durationInMillis = durationInMillis,
+            )
+
+            AmplitudeBallType.Spring -> SpringBall(
+                amplitude = amplitude,
+                screenHeight = screenHeight,
+                size = ballSize,
+                ballColor = ballColor,
             )
 
             AmplitudeBallType.Keyframes -> KeyframesBall(
@@ -132,6 +143,14 @@ fun AmplitudeBallContainer(
             )
 
             AmplitudeBallType.Bounce -> BounceBall(
+                amplitude = amplitude,
+                screenHeight = screenHeight,
+                size = ballSize,
+                ballColor = ballColor,
+                durationInMillis = durationInMillis,
+            )
+
+            AmplitudeBallType.Sine -> SineBall(
                 amplitude = amplitude,
                 screenHeight = screenHeight,
                 size = ballSize,
@@ -171,6 +190,58 @@ fun BoxScope.AnimatedBall(
     modifier: Modifier = Modifier,
 ) {
     val translationY by animateFloatAsState(-amplitude * screenHeight)
+
+    Ball(
+        size = size,
+        color = ballColor,
+        modifier = modifier
+            .align(Alignment.BottomCenter)
+            .graphicsLayer {
+                this.translationY = translationY
+            },
+    )
+}
+
+@Composable
+fun BoxScope.TweenBall(
+    amplitude: Float,
+    screenHeight: Int,
+    size: Dp = Grid.Ten,
+    ballColor: Color = TileColor.Blue,
+    durationInMillis: Int = AMPLITUDE_ANIMATION_DURATION,
+    modifier: Modifier = Modifier,
+) {
+    val translationY by animateFloatAsState(
+        targetValue = -amplitude * screenHeight,
+        animationSpec = tween(durationMillis = durationInMillis)
+    )
+
+    Ball(
+        size = size,
+        color = ballColor,
+        modifier = modifier
+            .align(Alignment.BottomCenter)
+            .graphicsLayer {
+                this.translationY = translationY
+            },
+    )
+}
+
+@Composable
+fun BoxScope.SpringBall(
+    amplitude: Float,
+    screenHeight: Int,
+    size: Dp = Grid.Ten,
+    ballColor: Color = TileColor.Blue,
+    modifier: Modifier = Modifier,
+) {
+    val translationY by animateFloatAsState(
+        targetValue = -amplitude * screenHeight,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium,
+        )
+    )
 
     Ball(
         size = size,
