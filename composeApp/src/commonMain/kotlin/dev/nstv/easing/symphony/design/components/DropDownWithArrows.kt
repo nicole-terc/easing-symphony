@@ -51,7 +51,7 @@ fun DropDownWithArrows(
     selectedIndex: Int = 0,
     label: String? = null,
     textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
-    loopSelection: Boolean = false,
+    loopSelection: Boolean = true,
 ) {
     var expanded by remember { mutableStateOf(false) }
     var selectedItemIndex by remember { mutableStateOf(selectedIndex) }

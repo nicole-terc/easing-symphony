@@ -41,7 +41,7 @@ fun AdvancedAmplitudeVisualizersScreen(
     modifier: Modifier = Modifier,
     numberOfBalls: Int = 5,
 ) {
-    var ballType by remember { mutableStateOf(AmplitudeBallType.Keyframes) }
+    var ballType by remember { mutableStateOf(AmplitudeBallType.Bounce) }
 
     Column(modifier = modifier.padding(Grid.One)) {
         MusicReaderWrapper(

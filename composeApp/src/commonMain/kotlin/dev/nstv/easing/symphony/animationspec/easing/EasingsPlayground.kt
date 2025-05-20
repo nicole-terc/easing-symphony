@@ -5,8 +5,12 @@ import androidx.compose.animation.core.LinearEasing
 import kotlin.math.PI
 import kotlin.math.floor
 import kotlin.math.log10
+import kotlin.math.sin
 
 enum class CustomEasingType {
+    Magnetic,
+    Sine,
+    InBounce,
     Bounce,
     Stepper,
     Spiral,
@@ -15,6 +19,9 @@ enum class CustomEasingType {
 
     fun getEasing(): Easing {
         return when (this) {
+            Magnetic -> MagneticEasing()
+            Sine -> SineWaveEasing()
+            InBounce -> EaseInBounce
             Bounce -> EaseOutBounce
             Stepper -> StepperEasing
             Spiral -> SpiralEasing
@@ -29,6 +36,58 @@ enum class CustomEasingType {
         fun getEasingMap(): Map<String, Easing> = entries.associate { it.name to it.getEasing() }
     }
 }
+
+fun MagneticEasing(threshold: Float = 0.2f): Easing = Easing { x ->
+    when {
+        x < threshold -> 0f
+        else -> (x - threshold) / (1f - threshold)
+    }
+}
+
+fun SineWaveEasing(
+    waveCount: Int = 3,
+    amplitude: Float = 0.1f
+): Easing = Easing { fraction ->
+    fraction + amplitude * sin(fraction * waveCount * 2f * PI).toFloat()
+}
+
+// Keyframes ignores the rest of the easing curve once it reaches the final value
+// Didn't work :(
+val EaseOutBounceAdjusted: Easing = Easing { fraction ->
+    val n1 = 7.5625f
+    val d1 = 2.75f
+
+    val raw = when {
+        fraction < 1f / d1 -> {
+            n1 * fraction * fraction
+        }
+
+        fraction < 2f / d1 -> {
+            val x2 = fraction - 1.5f / d1
+            n1 * x2 * x2 + 0.75f
+        }
+
+        fraction < 2.5f / d1 -> {
+            val x2 = fraction - 2.25f / d1
+            n1 * x2 * x2 + 0.9375f
+        }
+
+        else -> {
+            val x2 = fraction - 2.625f / d1
+            n1 * x2 * x2 + 0.984375f
+        }
+    }
+    if (raw == 1f && fraction != 1f) {
+        0.9f
+    } else {
+        raw
+    }
+}
+
+val EaseInBounce: Easing = Easing { fraction ->
+    1f - EaseOutBounce.transform(1f - fraction)
+}
+
 
 // source: https://easings.net/#easeOutBounce
 /*function easeOutBounce(x: number): number {
@@ -46,24 +105,27 @@ enum class CustomEasingType {
     }
 }
 */
-val EaseOutBounce: Easing = Easing { x ->
+val EaseOutBounce: Easing = Easing { fraction ->
     val n1 = 7.5625f
     val d1 = 2.75f
 
     when {
-        x < 1f / d1 -> {
-            n1 * x * x
+        fraction < 1f / d1 -> {
+            n1 * fraction * fraction
         }
-        x < 2f / d1 -> {
-            val x2 = x - 1.5f / d1
+
+        fraction < 2f / d1 -> {
+            val x2 = fraction - 1.5f / d1
             n1 * x2 * x2 + 0.75f
         }
-        x < 2.5f / d1 -> {
-            val x2 = x - 2.25f / d1
+
+        fraction < 2.5f / d1 -> {
+            val x2 = fraction - 2.25f / d1
             n1 * x2 * x2 + 0.9375f
         }
+
         else -> {
-            val x2 = x - 2.625f / d1
+            val x2 = fraction - 2.625f / d1
             n1 * x2 * x2 + 0.984375f
         }
     }

@@ -43,7 +43,7 @@ private enum class Screen {
     SIMPLE_MUSIC_VISUALIZER,
     BURST_MUSIC_VISUALIZER,
     AMPLITUDE_VISUALIZER,
-    ADVANCED_AMPLITUDE_VISUALIZER,
+    ADV_AMPLITUDE_VISUALIZER,
 }
 
 const val musicFileName = "nicmix.wav"
@@ -55,7 +55,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
     ) {
-        var selectedScreen by remember { mutableStateOf(ADVANCED_AMPLITUDE_VISUALIZER) }
+        var selectedScreen by remember { mutableStateOf(ADV_AMPLITUDE_VISUALIZER) }
 
         Column(
             modifier = Modifier
@@ -88,7 +88,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     ANIMATION_SPEC_OFFSET -> OffsetAnimationSpecScreen()
                     LOG_SPIRAL -> LogSpiralScreen()
                     AMPLITUDE_VISUALIZER -> AmplitudeVisualizersScreen()
-                    ADVANCED_AMPLITUDE_VISUALIZER -> AdvancedAmplitudeVisualizersScreen()
+                    ADV_AMPLITUDE_VISUALIZER -> AdvancedAmplitudeVisualizersScreen()
                 }
             }
         }
