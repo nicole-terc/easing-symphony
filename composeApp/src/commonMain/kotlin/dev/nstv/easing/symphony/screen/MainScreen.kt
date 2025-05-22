@@ -34,6 +34,7 @@ import dev.nstv.easing.symphony.screen.music.BurstMusicVisualizerScreen
 import dev.nstv.easing.symphony.screen.music.MusicPropertiesScreen
 import dev.nstv.easing.symphony.screen.music.SimpleMusicVisualizerScreen
 import dev.nstv.easing.symphony.screen.music.TheMusicVisualizer
+import dev.nstv.easing.symphony.screen.music.TheMusicVisualizerPartOne
 import dev.nstv.easing.symphony.screen.showcase.AnimationSpecEasingShowcaseScreen
 import dev.nstv.easing.symphony.screen.showcase.AnimationSpecShowcaseScreen
 
@@ -52,6 +53,7 @@ private enum class Screen {
     SHOWCASE_EASING,
     SHOWCASE_AMPLITUDE_EASING,
     THE_MUSIC_VISUALIZER,
+    VISUALIZER_PART_1,
 }
 
 const val musicFileName = "nicmix.wav"
@@ -64,7 +66,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
     ) {
-        var selectedScreen by remember { mutableStateOf(THE_MUSIC_VISUALIZER) }
+        var selectedScreen by remember { mutableStateOf(VISUALIZER_PART_1) }
 
         Column(
             modifier = Modifier
@@ -102,6 +104,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     SHOWCASE_EASING -> EasingShowcaseScreen()
                     SHOWCASE_AMPLITUDE_EASING -> AnimationSpecEasingShowcaseScreen()
                     THE_MUSIC_VISUALIZER -> TheMusicVisualizer()
+                    VISUALIZER_PART_1 -> TheMusicVisualizerPartOne()
                 }
             }
         }

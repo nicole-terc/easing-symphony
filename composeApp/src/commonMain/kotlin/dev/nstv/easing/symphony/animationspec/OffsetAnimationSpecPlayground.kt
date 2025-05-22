@@ -97,13 +97,14 @@ class SimpleSineAnimationSpec(val durationMillis: Int = DEFAULT_DURATION) : Anim
 class MyVectorSpec(val durationMillis: Int) : VectorizedAnimationSpec<AnimationVector2D> {
     private val waveCount: Int = 3
     private val amplitude: Float = 40f
+    private val durationNanos = durationMillis.toNanos()
 
     override val isInfinite: Boolean = false
     override fun getDurationNanos(
         initialValue: AnimationVector2D,
         targetValue: AnimationVector2D,
         initialVelocity: AnimationVector2D
-    ): Long = durationMillis.toNanos()
+    ): Long = durationNanos
 
     override fun getValueFromNanos(
         playTimeNanos: Long,
@@ -111,7 +112,7 @@ class MyVectorSpec(val durationMillis: Int) : VectorizedAnimationSpec<AnimationV
         targetValue: AnimationVector2D,
         initialVelocity: AnimationVector2D
     ): AnimationVector2D {
-        val t = (playTimeNanos / 1_000_000f).coerceIn(0f, durationMillis.toFloat()) / durationMillis
+        val progress = playTimeNanos / durationNanos.toFloat()
 
         val startX = initialValue.v1
         val startY = initialValue.v2
@@ -120,14 +121,15 @@ class MyVectorSpec(val durationMillis: Int) : VectorizedAnimationSpec<AnimationV
 
         val dx = endX - startX
         val dy = endY - startY
+
         val distance = hypot(dx, dy).coerceAtLeast(0.0001f)
         val directionX = dx / distance
         val directionY = -dy / distance
 
-        val baseX = startX + dx * t
-        val baseY = startY + dy * t
+        val baseX = startX + dx * progress
+        val baseY = startY + dy * progress
 
-        val offsetAmount = sin(t * waveCount * 2f * PI).toFloat() * amplitude
+        val offsetAmount = sin(progress * waveCount * 2f * PI).toFloat() * amplitude
 
         return AnimationVector2D(
             baseX + directionY * offsetAmount,
@@ -140,7 +142,7 @@ class MyVectorSpec(val durationMillis: Int) : VectorizedAnimationSpec<AnimationV
         initialValue: AnimationVector2D,
         targetValue: AnimationVector2D,
         initialVelocity: AnimationVector2D
-    ): AnimationVector2D = AnimationVector2D(100f, 0f)
+    ) = AnimationVector2D(0f, 0f)
 
 }
 

@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
+import dev.nstv.easing.symphony.design.Grid
 import dev.nstv.easing.symphony.design.TileColor
 import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader.Companion.FRAME_DELAY_MILLIS
 import dev.nstv.easing.symphony.util.getAlphaForPercentage
@@ -32,6 +33,9 @@ fun AmplitudeBallPhased(
     easing: Easing = LinearEasing,
     numberOfBalls: Int = 5,
     showOnlyOneBall: Boolean = false,
+    changeColor: Boolean = false,
+    changeAlpha: Boolean = false,
+    changeSize: Boolean = false,
     reset: Flow<Boolean> = flowOf(),
     offsetAnimationSpec: (durationInMillis: Int) -> AnimationSpec<Offset> = { duration ->
         tween(
@@ -67,12 +71,12 @@ fun AmplitudeBallPhased(
                 amplitude = itemAmplitude,
                 easing = easing,
                 amplitudeBallType = ballType,
-                ballSize = getSizeForPercentage(percentage),
-                ballColor = getColorForPercentage(percentage).copy(
-                    alpha = getAlphaForPercentage(
+                ballSize = if (changeSize) getSizeForPercentage(percentage) else Grid.Ten,
+                ballColor = if (changeColor) getColorForPercentage(percentage).copy(
+                    alpha = if (changeAlpha) getAlphaForPercentage(
                         percentage
-                    )
-                ),
+                    ) else 0.8f
+                ) else TileColor.Blue.copy(0.8f),
                 durationInMillis = animationDuration,
                 offsetAnimationSpec = offsetAnimationSpec,
             )
@@ -83,12 +87,12 @@ fun AmplitudeBallPhased(
                     amplitude = itemAmplitude,
                     easing = easing,
                     amplitudeBallType = ballType,
-                    ballSize = getSizeForPercentage(percentage),
-                    ballColor = getColorForPercentage(percentage).copy(
-                        alpha = getAlphaForPercentage(
+                    ballSize = if (changeSize) getSizeForPercentage(percentage) else Grid.Ten,
+                    ballColor = if (changeColor) getColorForPercentage(percentage).copy(
+                        alpha = if (changeAlpha) getAlphaForPercentage(
                             percentage
-                        )
-                    ),
+                        ) else 0.8f
+                    ) else TileColor.Blue.copy(0.8f),
                     durationInMillis = animationDuration,
                     offsetAnimationSpec = offsetAnimationSpec,
                 )
