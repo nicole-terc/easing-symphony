@@ -6,6 +6,7 @@ import androidx.compose.animation.core.AnimationVector2D
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.TwoWayConverter
 import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.VectorizedAnimationSpec
 import androidx.compose.animation.core.VectorizedFiniteAnimationSpec
 import androidx.compose.ui.geometry.Offset
 import kotlin.math.PI
@@ -35,6 +36,7 @@ class CartesianAnimationSpec(
     }
 }
 
+fun Int.toNanos() = this * 1_000_000L
 
 class CartesianVectorizedSpec(
     private val durationMillis: Int,

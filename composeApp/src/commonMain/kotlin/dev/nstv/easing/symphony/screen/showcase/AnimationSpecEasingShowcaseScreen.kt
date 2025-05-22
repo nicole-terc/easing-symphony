@@ -20,13 +20,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.nstv.easing.symphony.animationspec.easing.CustomCubicBezier
+import dev.nstv.easing.symphony.animationspec.easing.SineWaveEasing
+import dev.nstv.easing.symphony.animationspec.easing.SquaredEasing
+import dev.nstv.easing.symphony.animationspec.easing.StepperEasing
 import dev.nstv.easing.symphony.design.Grid
 import dev.nstv.easing.symphony.design.TileColor
 import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader.Companion.FRAME_DELAY_MILLIS
 import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReaderWrapper
 import dev.nstv.easing.symphony.musicvisualizer.reader.musicPlayerControl
 import dev.nstv.easing.symphony.screen.components.AmplitudeBallContainer
-import dev.nstv.easing.symphony.screen.components.AmplitudeBallType
 import dev.nstv.easing.symphony.screen.musicFilePath
 import dev.nstv.easing.symphony.util.getAlphaForPercentage
 import dev.nstv.easing.symphony.util.getColorForPercentage
@@ -40,7 +43,7 @@ import kotlin.math.min
 
 private const val UseDummyFlow = false
 private const val DummyDelay = 750L
-private const val ShowOnlyOneBall = false
+private const val ShowOnlyOneBall = true
 
 private val dummyAmplitudeFlow = flow {
     while (true) {
@@ -52,12 +55,13 @@ private val dummyAmplitudeFlow = flow {
         delay(DummyDelay * 3)
     }
 }
+const val AmplitudeScale = 1.4f
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
-fun AnimationSpecShowcaseScreen(
+fun AnimationSpecEasingShowcaseScreen(
     modifier: Modifier = Modifier,
-    _numberOfBalls: Int = 3,
+    _numberOfBalls: Int = 2,
 ) {
     val numberOfBalls = if (UseDummyFlow) 1 else _numberOfBalls
     Column(modifier = modifier.padding(Grid.One)) {
@@ -65,10 +69,19 @@ fun AnimationSpecShowcaseScreen(
             fileUri = Res.getUri(musicFilePath),
             playOnLoad = false,
         ) { musicReader ->
-            val ballTypes = mapOf(
-                "Spring" to AmplitudeBallType.Spring,
-                "Tween" to AmplitudeBallType.Tween,
-                "Keyframes" to AmplitudeBallType.Keyframes,
+            val easings = mapOf(
+//                "Linear" to LinearEasing,
+//                "FastOutSlowIn" to FastOutSlowInEasing,
+//                "FastOutLinearIn" to FastOutLinearInEasing,
+//                "LinearOutSlowIn" to LinearOutSlowInEasing,
+//                "EaseOutBounce" to EaseOutBounce,
+//                "EaseInBounce" to EaseInBounce,
+                "CubicBezier" to CustomCubicBezier,
+                "Sine" to SineWaveEasing(),
+                "EaseInQuad" to SquaredEasing,
+                "Stepper" to StepperEasing,
+//                "Magnetic" to MagneticEasing(),
+//                "EaseInElastic" to EaseInElastic,
             )
 
             val amplitudeFlow = if (UseDummyFlow) dummyAmplitudeFlow else musicReader.amplitude
@@ -83,7 +96,7 @@ fun AnimationSpecShowcaseScreen(
 
             LaunchedEffect(amplitude) {
                 counter++
-                savedAmplitude[counter % numberOfBalls] = amplitude
+                savedAmplitude[counter % numberOfBalls] = amplitude //.pow(AmplitudeScale) // Pow
             }
 
             Row(
@@ -94,11 +107,11 @@ fun AnimationSpecShowcaseScreen(
                     },
                 horizontalArrangement = spacedBy(Grid.Two)
             ) {
-                ballTypes.forEach { ballEntry ->
+                easings.forEach { easingEntry ->
                     Column(Modifier.weight(1f)) {
                         Text(
                             modifier = Modifier.fillMaxWidth().padding(bottom = Grid.One),
-                            text = ballEntry.key,
+                            text = easingEntry.key,
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.headlineMedium
                         )
@@ -110,7 +123,7 @@ fun AnimationSpecShowcaseScreen(
 
                                 AmplitudeBallContainer(
                                     amplitude = itemAmplitude,
-                                    amplitudeBallType = ballEntry.value,
+                                    easing = easingEntry.value,
                                     ballSize = getSizeForPercentage(percentage),
                                     ballColor = getColorForPercentage(percentage).copy(
                                         alpha = getAlphaForPercentage(
@@ -124,7 +137,7 @@ fun AnimationSpecShowcaseScreen(
                                     val percentage = 1f - index.toFloat() / numberOfBalls
                                     AmplitudeBallContainer(
                                         amplitude = itemAmplitude,
-                                        amplitudeBallType = ballEntry.value,
+                                        easing = easingEntry.value,
                                         ballSize = getSizeForPercentage(percentage),
                                         ballColor = getColorForPercentage(percentage).copy(
                                             alpha = getAlphaForPercentage(

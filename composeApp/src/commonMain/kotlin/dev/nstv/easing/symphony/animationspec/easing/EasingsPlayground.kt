@@ -1,17 +1,42 @@
 package dev.nstv.easing.symphony.animationspec.easing
 
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import kotlin.math.PI
 import kotlin.math.floor
 import kotlin.math.log10
+import kotlin.math.pow
 import kotlin.math.sin
 
+fun getEasingMapWithNames() = mapOf(
+    "Linear" to LinearEasing,
+    "FastOutSlowIn" to FastOutSlowInEasing,
+    "FastOutLinearIn" to FastOutLinearInEasing,
+    "LinearOutSlowIn" to LinearOutSlowInEasing,
+    "EaseOutBounce" to EaseOutBounce,
+    "EaseInBounce" to EaseInBounce,
+    "CubicBezier" to CustomCubicBezier,
+    "Sine" to SineWaveEasing(),
+    "EaseInQuad" to SquaredEasing,
+    "Stepper" to StepperEasing,
+    "Magnetic" to MagneticEasing(),
+    "EaseInElastic" to EaseInElastic,
+)
+
+
 enum class CustomEasingType {
+    Squared,
     Magnetic,
     Sine,
     InBounce,
     Bounce,
+    Elastic,
+    InElastic,
+    CubicBezier,
     Stepper,
     Spiral,
     Log,
@@ -19,10 +44,14 @@ enum class CustomEasingType {
 
     fun getEasing(): Easing {
         return when (this) {
+            Squared -> SquaredEasing
             Magnetic -> MagneticEasing()
             Sine -> SineWaveEasing()
             InBounce -> EaseInBounce
             Bounce -> EaseOutBounce
+            Elastic -> EaseOutElastic
+            InElastic -> EaseInElastic
+            CubicBezier -> CustomCubicBezier
             Stepper -> StepperEasing
             Spiral -> SpiralEasing
             Log -> LogEasing
@@ -36,6 +65,12 @@ enum class CustomEasingType {
         fun getEasingMap(): Map<String, Easing> = entries.associate { it.name to it.getEasing() }
     }
 }
+
+// Option 1: Play with CubicBezierEasing
+val CustomCubicBezier = CubicBezierEasing(0.68f, -0.55f, 0.27f, 1.55f)
+
+// Option 2: Create a custom Easing function
+val SquaredEasing = Easing { x -> x * x }
 
 fun MagneticEasing(threshold: Float = 0.2f): Easing = Easing { x ->
     when {
@@ -90,21 +125,6 @@ val EaseInBounce: Easing = Easing { fraction ->
 
 
 // source: https://easings.net/#easeOutBounce
-/*function easeOutBounce(x: number): number {
-    const n1 = 7.5625;
-    const d1 = 2.75;
-
-    if (x < 1 / d1) {
-        return n1 * x * x;
-    } else if (x < 2 / d1) {
-        return n1 * (x -= 1.5 / d1) * x + 0.75;
-    } else if (x < 2.5 / d1) {
-        return n1 * (x -= 2.25 / d1) * x + 0.9375;
-    } else {
-        return n1 * (x -= 2.625 / d1) * x + 0.984375;
-    }
-}
-*/
 val EaseOutBounce: Easing = Easing { fraction ->
     val n1 = 7.5625f
     val d1 = 2.75f
@@ -127,6 +147,36 @@ val EaseOutBounce: Easing = Easing { fraction ->
         else -> {
             val x2 = fraction - 2.625f / d1
             n1 * x2 * x2 + 0.984375f
+        }
+    }
+}
+
+// source: https://easings.net/#easeOutBounce
+val EaseOutElastic: Easing = Easing { x ->
+    val c4 = (2 * PI) / 3
+
+    when {
+        x == 0f -> 0f
+        x == 1f -> 1f
+        else -> {
+            val pow = 2.0.pow(-10 * x.toDouble())
+            val sin = sin((x * 10 - 0.75) * c4)
+            (pow * sin + 1).toFloat()
+        }
+    }
+}
+
+// source: https://easings.net/#easeOutBounce
+val EaseInElastic: Easing = Easing { x ->
+    val c4 = (2 * PI) / 3
+
+    when {
+        x == 0f -> 0f
+        x == 1f -> 1f
+        else -> {
+            val pow = 2.0.pow(10.0 * x - 10)
+            val sin = sin((x * 10 - 10.75) * c4)
+            (-pow * sin).toFloat()
         }
     }
 }

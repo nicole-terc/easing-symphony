@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.unit.dp
 import dev.nstv.easing.symphony.design.TileColor
 
 @Composable
@@ -32,6 +33,14 @@ fun DrawAnimationSpecPath(
     val durationNanos = vectorizedSpec.getDurationNanos(initialVec, targetVec, initialVelocity)
 
     Canvas(modifier = modifier) {
+        if (showLine) {
+            drawLine(
+                start = from,
+                end = to,
+                color = TileColor.LightGray.copy(alpha = 0.8f),
+                strokeWidth = 2.dp.toPx()
+            )
+        }
         if (showPath) {
             val path = Path()
 
@@ -50,16 +59,7 @@ fun DrawAnimationSpecPath(
                 else path.lineTo(offset.x, offset.y)
             }
 
-            drawPath(path, color = color, style = Stroke(width = 2f))
-        }
-
-        if (showLine) {
-            drawLine(
-                start = from,
-                end = to,
-                color = TileColor.LightGray.copy(alpha = 0.8f),
-                strokeWidth = 2f
-            )
+            drawPath(path, color = color, style = Stroke(width = 3.dp.toPx()))
         }
     }
 }

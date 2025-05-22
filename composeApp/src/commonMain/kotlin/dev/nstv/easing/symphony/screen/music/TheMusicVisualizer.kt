@@ -49,7 +49,7 @@ import kotlin.math.min
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
-fun AdvancedAmplitudeVisualizersScreen(
+fun TheMusicVisualizer(
     modifier: Modifier = Modifier,
     numberOfBalls: Int = 5,
     showOnlyOneBall: Boolean = false,
@@ -119,6 +119,3 @@ fun AdvancedAmplitudeVisualizersScreen(
         }
     }
 }
-
-
-

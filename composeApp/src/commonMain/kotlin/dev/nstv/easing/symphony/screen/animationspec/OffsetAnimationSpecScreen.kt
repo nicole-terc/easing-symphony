@@ -36,6 +36,7 @@ import dev.nstv.easing.symphony.design.TileColor
 import dev.nstv.easing.symphony.design.components.Ball
 import dev.nstv.easing.symphony.design.components.DropDownWithArrows
 import dev.nstv.easing.symphony.screen.components.DrawAnimationSpecPath
+import kotlin.math.min
 
 private const val ShowPath = true
 private const val ShowLine = true
@@ -82,7 +83,7 @@ fun AnimationSpecOffsetVisualizer(
     trigger: Boolean, // True = Animate to targetPosition, false = go back to origin
     modifier: Modifier = Modifier,
     ballSize: Dp = Grid.Five,
-    animateBack: Boolean = false,
+    animateBack: Boolean = true,
 ) {
     val density = LocalDensity.current
     val ballSizePx = with(density) { ballSize.toPx() }
@@ -116,8 +117,8 @@ fun AnimationSpecOffsetVisualizer(
                 .padding(Grid.Half)
                 .onGloballyPositioned {
                     with(density) {
-                        theaterWidthPixels = it.size.width - ballSize.toPx()
-                        theaterWidth = it.size.width.toDp() - ballSize
+                        theaterWidthPixels = min(it.size.width, it.size.height) - ballSize.toPx()
+                        theaterWidth = theaterWidthPixels.toDp()
                     }
                 }
     ) {

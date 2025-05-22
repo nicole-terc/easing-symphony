@@ -5,7 +5,6 @@ import androidx.compose.animation.core.AnimationVector
 import androidx.compose.animation.core.AnimationVector2D
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.Spring.DampingRatioHighBouncy
 import androidx.compose.animation.core.Spring.DampingRatioMediumBouncy
 import androidx.compose.animation.core.Spring.StiffnessHigh
@@ -27,6 +26,7 @@ import kotlin.math.ln
 import kotlin.math.sin
 
 enum class CustomOffsetAnimationSpec {
+    Simple_Sine,
     CartesianSine,
     CartesianSineDecay,
     CartesianJitter,
@@ -41,23 +41,26 @@ enum class CustomOffsetAnimationSpec {
     Spring,
     Snap;
 
-    fun toAnimationSpec(): AnimationSpec<Offset> = when (this) {
-        Drift -> DriftOffsetSpec()
-        Tween -> tween(easing = LinearEasing)
-        Spring -> spring(dampingRatio = DampingRatioMediumBouncy, stiffness = StiffnessMedium)
-        Snap -> snap()
-        CartesianSine -> sineWaveSpec()
-        CartesianSineDecay -> sineWaveDecaySpec()
-        CartesianJitter -> jitterySpec()
-        SpiralSine -> sineSpiralSpec()
-        SpiralSineCircle -> sineWaveCircleSpec()
-        SpiralLog -> SpiralLogAnimationSpec()
-        SpiralArchimedean -> archimedeanSpiralSpec()
-        SpiralFibonacci -> fibonacciSpiralSpec()
-        SpiralWiggle -> wiggleSpiralSpec()
-    }
+    fun toAnimationSpec(durationMillis: Int = DEFAULT_DURATION): AnimationSpec<Offset> =
+        when (this) {
+            Simple_Sine -> SimpleSineAnimationSpec(durationMillis = durationMillis)
+            Drift -> DriftOffsetSpec(durationMillis = durationMillis)
+            Tween -> tween(easing = LinearEasing, durationMillis = durationMillis)
+            Spring -> spring(dampingRatio = DampingRatioMediumBouncy, stiffness = StiffnessMedium)
+            Snap -> snap()
+            CartesianSine -> sineWaveSpec(durationMillis = durationMillis)
+            CartesianSineDecay -> sineWaveDecaySpec(durationMillis = durationMillis)
+            CartesianJitter -> jitterySpec(durationMillis = durationMillis)
+            SpiralSine -> sineSpiralSpec(durationMillis = durationMillis)
+            SpiralSineCircle -> sineWaveCircleSpec(durationMillis = durationMillis)
+            SpiralLog -> SpiralLogAnimationSpec(durationMillis = durationMillis)
+            SpiralArchimedean -> archimedeanSpiralSpec(durationMillis = durationMillis)
+            SpiralFibonacci -> fibonacciSpiralSpec(durationMillis = durationMillis)
+            SpiralWiggle -> wiggleSpiralSpec(durationMillis = durationMillis)
+        }
 
     fun toInvertedAnimationSpec(): AnimationSpec<Offset> = when (this) {
+        Simple_Sine -> SimpleSineAnimationSpec()
         Drift -> DriftOffsetSpec()
         Tween -> tween(easing = LinearEasing)
         Spring -> spring(dampingRatio = DampingRatioHighBouncy, stiffness = StiffnessHigh)
@@ -80,6 +83,65 @@ enum class CustomOffsetAnimationSpec {
         fun getInvertedAnimationSpecMap(): Map<String, AnimationSpec<Offset>> =
             entries.associate { it.name to it.toInvertedAnimationSpec() }
     }
+}
+
+// --- Simple SineSpec (no projection) ---
+
+@Suppress("UNCHECKED_CAST")
+class SimpleSineAnimationSpec(val durationMillis: Int = DEFAULT_DURATION) : AnimationSpec<Offset> {
+    override fun <V : AnimationVector> vectorize(converter: TwoWayConverter<Offset, V>): VectorizedAnimationSpec<V> {
+        return MyVectorSpec(durationMillis) as VectorizedAnimationSpec<V>
+    }
+}
+
+class MyVectorSpec(val durationMillis: Int) : VectorizedAnimationSpec<AnimationVector2D> {
+    private val waveCount: Int = 3
+    private val amplitude: Float = 40f
+
+    override val isInfinite: Boolean = false
+    override fun getDurationNanos(
+        initialValue: AnimationVector2D,
+        targetValue: AnimationVector2D,
+        initialVelocity: AnimationVector2D
+    ): Long = durationMillis.toNanos()
+
+    override fun getValueFromNanos(
+        playTimeNanos: Long,
+        initialValue: AnimationVector2D,
+        targetValue: AnimationVector2D,
+        initialVelocity: AnimationVector2D
+    ): AnimationVector2D {
+        val t = (playTimeNanos / 1_000_000f).coerceIn(0f, durationMillis.toFloat()) / durationMillis
+
+        val startX = initialValue.v1
+        val startY = initialValue.v2
+        val endX = targetValue.v1
+        val endY = targetValue.v2
+
+        val dx = endX - startX
+        val dy = endY - startY
+        val distance = hypot(dx, dy).coerceAtLeast(0.0001f)
+        val directionX = dx / distance
+        val directionY = -dy / distance
+
+        val baseX = startX + dx * t
+        val baseY = startY + dy * t
+
+        val offsetAmount = sin(t * waveCount * 2f * PI).toFloat() * amplitude
+
+        return AnimationVector2D(
+            baseX + directionY * offsetAmount,
+            baseY + directionX * offsetAmount
+        )
+    }
+
+    override fun getVelocityFromNanos(
+        playTimeNanos: Long,
+        initialValue: AnimationVector2D,
+        targetValue: AnimationVector2D,
+        initialVelocity: AnimationVector2D
+    ): AnimationVector2D = AnimationVector2D(100f, 0f)
+
 }
 
 // --- SpiralSpec ---

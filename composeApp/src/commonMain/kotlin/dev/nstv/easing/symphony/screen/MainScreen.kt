@@ -25,6 +25,7 @@ import dev.nstv.easing.symphony.design.slidesBackground
 import dev.nstv.easing.symphony.screen.Screen.*
 import dev.nstv.easing.symphony.screen.animationspec.AnimationSpecScreen
 import dev.nstv.easing.symphony.screen.animationspec.EasingScreen
+import dev.nstv.easing.symphony.screen.showcase.EasingShowcaseScreen
 import dev.nstv.easing.symphony.screen.animationspec.OffsetAnimationSpecScreen
 import dev.nstv.easing.symphony.screen.`fun`.LogSpiralScreen
 import dev.nstv.easing.symphony.screen.music.AdvancedAmplitudeVisualizersScreen
@@ -32,6 +33,8 @@ import dev.nstv.easing.symphony.screen.music.AmplitudeVisualizersScreen
 import dev.nstv.easing.symphony.screen.music.BurstMusicVisualizerScreen
 import dev.nstv.easing.symphony.screen.music.MusicPropertiesScreen
 import dev.nstv.easing.symphony.screen.music.SimpleMusicVisualizerScreen
+import dev.nstv.easing.symphony.screen.music.TheMusicVisualizer
+import dev.nstv.easing.symphony.screen.showcase.AnimationSpecEasingShowcaseScreen
 import dev.nstv.easing.symphony.screen.showcase.AnimationSpecShowcaseScreen
 
 
@@ -46,6 +49,9 @@ private enum class Screen {
     AMPLITUDE_VISUALIZER,
     ADV_AMPLITUDE_VISUALIZER,
     SHOWCASE_ANIMATION_SPEC,
+    SHOWCASE_EASING,
+    SHOWCASE_AMPLITUDE_EASING,
+    THE_MUSIC_VISUALIZER,
 }
 
 const val musicFileName = "nicmix.wav"
@@ -58,7 +64,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
     ) {
-        var selectedScreen by remember { mutableStateOf(SHOWCASE_ANIMATION_SPEC) }
+        var selectedScreen by remember { mutableStateOf(THE_MUSIC_VISUALIZER) }
 
         Column(
             modifier = Modifier
@@ -93,6 +99,9 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     AMPLITUDE_VISUALIZER -> AmplitudeVisualizersScreen()
                     ADV_AMPLITUDE_VISUALIZER -> AdvancedAmplitudeVisualizersScreen()
                     SHOWCASE_ANIMATION_SPEC -> AnimationSpecShowcaseScreen()
+                    SHOWCASE_EASING -> EasingShowcaseScreen()
+                    SHOWCASE_AMPLITUDE_EASING -> AnimationSpecEasingShowcaseScreen()
+                    THE_MUSIC_VISUALIZER -> TheMusicVisualizer()
                 }
             }
         }

@@ -1,8 +1,14 @@
 package dev.nstv.easing.symphony.screen.components
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateOffsetAsState
 import androidx.compose.animation.core.keyframes
@@ -12,10 +18,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,58 +37,77 @@ import dev.nstv.easing.symphony.animationspec.sineWaveSpec
 import dev.nstv.easing.symphony.design.Grid
 import dev.nstv.easing.symphony.design.TileColor
 import dev.nstv.easing.symphony.design.components.Ball
-import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader
 import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader.Companion.FRAME_DELAY_MILLIS
+import kotlinx.coroutines.launch
 
 enum class AmplitudeBallType {
     Simple,
     Animated,
     Tween,
+    Tween_LinearEasing,
+    Tween_FastOutSlowInEasing,
+    Tween_FastOutLinearInEasing,
+    Tween_LinearOutSlowInEasing,
     Spring,
     Keyframes,
     KeyframesWithBounce,
     Sine,
     Bounce,
+    Restart;
+
+    fun supportsAnimationSpec() = this in setOf(
+        Tween,
+        Bounce,
+        Restart,
+    )
 }
 
 const val AMPLITUDE_ANIMATION_DURATION = FRAME_DELAY_MILLIS.toInt()
 
-@Composable
-fun AmplitudeAnimation(
-    musicReader: MusicReader,
-) {
-    val amplitude by musicReader.amplitude.collectAsState()
-    var screenHeight by remember { mutableStateOf(0) }
+//@Composable
+//fun AmplitudeAnimation(
+//    musicReader: MusicReader,
+//) {
+//    val amplitude by musicReader.amplitude.collectAsState()
+//    var screenHeight by remember { mutableStateOf(0) }
+//
+//    val translationY by animateFloatAsState(
+//        targetValue = -amplitude * screenHeight,
+//        animationSpec = tween()
+//    )
+//
+//    Box(
+//        Modifier.fillMaxSize()
+//            .onGloballyPositioned {
+//                screenHeight = it.size.height
+//            }
+//    ) {
+//        Box(
+//            Modifier
+//                .background(color = Color.Blue, shape = CircleShape)
+//                .graphicsLayer {
+//                    this.translationY = translationY
+//                }
+//        )
+//    }
+//}
 
-    val translationY by animateFloatAsState(
-        targetValue = -amplitude * screenHeight,
-        animationSpec = tween()
-    )
-
-    Box(
-        Modifier.fillMaxSize()
-            .onGloballyPositioned {
-                screenHeight = it.size.height
-            }
-    ) {
-        Box(
-            Modifier
-                .background(color = Color.Blue, shape = CircleShape)
-                .graphicsLayer {
-                    this.translationY = translationY
-                }
-        )
-    }
-}
 
 @Composable
 fun AmplitudeBallContainer(
     amplitude: Float,
     modifier: Modifier = Modifier,
     amplitudeBallType: AmplitudeBallType = AmplitudeBallType.Simple,
+    easing: Easing = LinearEasing,
     ballSize: Dp = Grid.Ten,
     ballColor: Color = TileColor.Blue,
     durationInMillis: Int = AMPLITUDE_ANIMATION_DURATION,
+    offsetAnimationSpec: (durationInMillis: Int) -> AnimationSpec<Offset> = { duration ->
+        tween(
+            durationMillis = duration,
+            easing = easing
+        )
+    },
 ) {
     var screenHeight by remember { mutableStateOf(0) }
 
@@ -112,8 +135,46 @@ fun AmplitudeBallContainer(
             )
 
             AmplitudeBallType.Tween -> TweenBall(
+                easing = easing,
+                offsetAnimationSpec = offsetAnimationSpec,
                 amplitude = amplitude,
                 screenHeight = screenHeight,
+                size = ballSize,
+                ballColor = ballColor,
+                durationInMillis = durationInMillis,
+            )
+
+            AmplitudeBallType.Tween_LinearEasing -> TweenBall(
+                amplitude = amplitude,
+                screenHeight = screenHeight,
+                easing = LinearEasing,
+                size = ballSize,
+                ballColor = ballColor,
+                durationInMillis = durationInMillis,
+            )
+
+            AmplitudeBallType.Tween_FastOutSlowInEasing -> TweenBall(
+                amplitude = amplitude,
+                screenHeight = screenHeight,
+                easing = FastOutSlowInEasing,
+                size = ballSize,
+                ballColor = ballColor,
+                durationInMillis = durationInMillis,
+            )
+
+            AmplitudeBallType.Tween_FastOutLinearInEasing -> TweenBall(
+                amplitude = amplitude,
+                screenHeight = screenHeight,
+                easing = FastOutLinearInEasing,
+                size = ballSize,
+                ballColor = ballColor,
+                durationInMillis = durationInMillis,
+            )
+
+            AmplitudeBallType.Tween_LinearOutSlowInEasing -> TweenBall(
+                amplitude = amplitude,
+                screenHeight = screenHeight,
+                easing = LinearOutSlowInEasing,
                 size = ballSize,
                 ballColor = ballColor,
                 durationInMillis = durationInMillis,
@@ -143,6 +204,18 @@ fun AmplitudeBallContainer(
             )
 
             AmplitudeBallType.Bounce -> BounceBall(
+                offsetAnimationSpec = offsetAnimationSpec,
+                easing = easing,
+                amplitude = amplitude,
+                screenHeight = screenHeight,
+                size = ballSize,
+                ballColor = ballColor,
+                durationInMillis = durationInMillis,
+            )
+
+            AmplitudeBallType.Restart -> BounceBallInvisibleBack(
+                offsetAnimationSpec = offsetAnimationSpec,
+                easing = easing,
                 amplitude = amplitude,
                 screenHeight = screenHeight,
                 size = ballSize,
@@ -206,14 +279,23 @@ fun BoxScope.AnimatedBall(
 fun BoxScope.TweenBall(
     amplitude: Float,
     screenHeight: Int,
+    easing: Easing = FastOutSlowInEasing,
     size: Dp = Grid.Ten,
     ballColor: Color = TileColor.Blue,
     durationInMillis: Int = AMPLITUDE_ANIMATION_DURATION,
     modifier: Modifier = Modifier,
+    offsetAnimationSpec: (durationInMillis: Int) -> AnimationSpec<Offset> = { duration ->
+        tween(
+            durationMillis = duration,
+            easing = easing
+        )
+    },
 ) {
-    val translationY by animateFloatAsState(
-        targetValue = -amplitude * screenHeight,
-        animationSpec = tween(durationMillis = durationInMillis)
+    val targetOffset = Offset(0f, -amplitude * screenHeight)
+
+    val translation by animateOffsetAsState(
+        targetValue = targetOffset,
+        animationSpec = offsetAnimationSpec(durationInMillis),
     )
 
     Ball(
@@ -222,7 +304,8 @@ fun BoxScope.TweenBall(
         modifier = modifier
             .align(Alignment.BottomCenter)
             .graphicsLayer {
-                this.translationY = translationY
+                this.translationY = translation.y
+                this.translationX = translation.x
             },
     )
 }
@@ -319,23 +402,36 @@ fun BoxScope.KeyframesWithBounceBall(
 }
 
 @Composable
-fun BoxScope.BounceBall(
+fun BoxScope.BounceBallInvisibleBack(
     amplitude: Float,
     screenHeight: Int,
+    easing: Easing = EaseOutBounce,
     size: Dp = Grid.Ten,
     ballColor: Color = TileColor.Blue,
     durationInMillis: Int = AMPLITUDE_ANIMATION_DURATION,
     modifier: Modifier = Modifier,
+    offsetAnimationSpec: (durationInMillis: Int) -> AnimationSpec<Offset> = { duration ->
+        tween(
+            durationMillis = duration,
+            easing = easing
+        )
+    },
 ) {
-    val newTranslationY = -amplitude * screenHeight
-    val translationY = remember { Animatable(0f) }
+    val alpha = remember { Animatable(1f) }
 
-    val goingDownTime = remember { durationInMillis / 5 }
-    val goingUpTime = remember { durationInMillis - goingDownTime }
+    val targetOffset = Offset(0f, -amplitude * screenHeight)
+    val translation = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
+
 
     LaunchedEffect(amplitude) {
-        translationY.animateTo(0f, tween(goingDownTime, easing = LinearEasing))
-        translationY.animateTo(newTranslationY, tween(goingUpTime, easing = EaseOutBounce))
+        translation.snapTo(Offset.Zero)
+        alpha.snapTo(1f)
+        launch {
+            translation.animateTo(targetOffset, offsetAnimationSpec(durationInMillis))
+        }
+        launch {
+            alpha.animateTo(0f, tween(durationInMillis, easing = LinearEasing))
+        }
     }
 
     Ball(
@@ -344,7 +440,49 @@ fun BoxScope.BounceBall(
         modifier = modifier
             .align(Alignment.BottomCenter)
             .graphicsLayer {
-                this.translationY = translationY.value
+                this.translationY = translation.value.y
+                this.translationX = translation.value.x
+                this.alpha = alpha.value
+            },
+    )
+}
+
+@Composable
+fun BoxScope.BounceBall(
+    amplitude: Float,
+    screenHeight: Int,
+    easing: Easing = EaseOutBounce,
+    size: Dp = Grid.Ten,
+    ballColor: Color = TileColor.Blue,
+    durationInMillis: Int = AMPLITUDE_ANIMATION_DURATION,
+    modifier: Modifier = Modifier,
+    offsetAnimationSpec: (durationInMillis: Int) -> AnimationSpec<Offset> = { duration ->
+        tween(
+            durationMillis = duration,
+            easing = easing
+        )
+    },
+) {
+
+    val targetOffset = Offset(0f, -amplitude * screenHeight)
+    val translation = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
+
+    val goingDownTime = remember { durationInMillis / 5 }
+    val goingUpTime = remember { durationInMillis - goingDownTime }
+
+    LaunchedEffect(amplitude) {
+        translation.animateTo(Offset.Zero, tween(goingDownTime, easing = LinearEasing))
+        translation.animateTo(targetOffset, offsetAnimationSpec(goingUpTime))
+    }
+
+    Ball(
+        size = size,
+        color = ballColor,
+        modifier = modifier
+            .align(Alignment.BottomCenter)
+            .graphicsLayer {
+                this.translationY = translation.value.y
+                this.translationX = translation.value.x
             },
     )
 }

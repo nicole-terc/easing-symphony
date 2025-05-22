@@ -203,4 +203,51 @@ fun fibonacciSpiralSpec(
     )
 }
 
+//interface VectorizedAnimationSpec<V : AnimationVector> {
+//
+//    val isInfinite: Boolean
+//
+//    // Calculates the value of the animation at given the playtime
+//    fun getValueFromNanos(
+//        playTimeNanos: Long,
+//        initialValue: V,
+//        targetValue: V,
+//        initialVelocity: V
+//    ): V
+//
+//    // Calculates the velocity of the animation at given the playtime, with the provided start/end
+//    fun getVelocityFromNanos(
+//        playTimeNanos: Long,
+//        initialValue: V,
+//        targetValue: V,
+//        initialVelocity: V
+//    ): V
+//
+//
+//    // Calculates the duration of an animation.
+//    fun getDurationNanos(initialValue: V, targetValue: V, initialVelocity: V): Long
+//}
+//
+//interface MVectorizedAnimationSpec<Offset : AnimationVector> {
+//
+//    val isInfinite: Boolean
+//
+//    // Calculates the value of the animation at given the playtime
+//    fun getValueFromNanos(): Offset
+//
+//    // Calculates the velocity of the animation at given the playtime
+//    fun getVelocityFromNanos(): Offset
+//
+//
+//    // Calculates the duration of an animation.
+//    fun getDurationNanos(): Long
+//
+//    fun ble(){
+//        isInfinite
+//        getDurationNanos()
+//        getVelocityFromNanos()
+//        getValueFromNanos()
+//    }
+//}
+
 

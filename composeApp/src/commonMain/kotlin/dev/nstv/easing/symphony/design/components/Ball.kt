@@ -2,6 +2,7 @@ package dev.nstv.easing.symphony.design.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
@@ -20,6 +21,7 @@ fun Ball(
     Box(
         modifier = modifier
             .size(size)
+            .aspectRatio(1f)
             .background(shape = CircleShape, color = color)
     )
 }
