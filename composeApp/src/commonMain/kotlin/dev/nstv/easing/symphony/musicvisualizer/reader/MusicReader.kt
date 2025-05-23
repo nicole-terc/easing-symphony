@@ -77,7 +77,7 @@ abstract class MusicReader(
         const val FRAME_SIZE: Int = 1024
 
         // 16L ~ 60fps | 32L ~ 30fps | 64L ~ 15fps
-        const val FRAME_DELAY_MILLIS: Long = 172L//256L
+        const val FRAME_DELAY_MILLIS: Long = 256L//172L//256L
         const val SAMPLE_RATE: Int = 44100
         const val FFT_BINS: Int = 64
         const val PLAY_DELAY: Long = 10L

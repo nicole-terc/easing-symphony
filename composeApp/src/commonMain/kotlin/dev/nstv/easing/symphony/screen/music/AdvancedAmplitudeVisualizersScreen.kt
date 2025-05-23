@@ -110,6 +110,7 @@ fun AdvancedAmplitudeVisualizersScreen(
                     ballType = ballType,
                     numberOfBalls = numberOfBalls,
                     showOnlyOneBall = showOnlyOneBall,
+                    showBorder = true,
                     offsetAnimationSpec = { duration ->
                         animationSpecEntries[selectedAnimationSpecIndex].toAnimationSpec(duration)
                     }

@@ -1,121 +1,110 @@
 package dev.nstv.easing.symphony.screen.music
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.keyframes
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement.spacedBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import dev.nstv.easing.symphony.animationspec.CustomOffsetAnimationSpec
 import dev.nstv.easing.symphony.design.Grid
-import dev.nstv.easing.symphony.design.components.Ball
-import dev.nstv.easing.symphony.design.components.DropDownWithArrows
-import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReader.Companion.FRAME_DELAY_MILLIS
+import dev.nstv.easing.symphony.design.TileColor
 import dev.nstv.easing.symphony.musicvisualizer.reader.MusicReaderWrapper
 import dev.nstv.easing.symphony.musicvisualizer.reader.musicPlayerControl
 import dev.nstv.easing.symphony.screen.components.AmplitudeBallPhased
 import dev.nstv.easing.symphony.screen.components.AmplitudeBallType
 import dev.nstv.easing.symphony.screen.musicFilePath
 import easingsymphony.composeapp.generated.resources.Res
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
+private const val UseDummyFlow = false
+private const val DummyDelay = 750L
+private const val ShowOnlyOneBall = false
+
+private val dummyAmplitudeFlow = flow {
+    while (true) {
+        emit(0f)
+        delay(DummyDelay * 2)
+        emit(0.45f)
+        delay(DummyDelay * 2)
+        emit(0.85f)
+        delay(DummyDelay * 3)
+    }
+}
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun TheMusicVisualizerPartOne(
     modifier: Modifier = Modifier,
-//    numberOfBalls: Int = 5,
-//    showOnlyOneBall: Boolean = false,
+    _numberOfBalls: Int = 5,
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val numberOfBalls = if (UseDummyFlow) 1 else _numberOfBalls
     val resetFlow = MutableSharedFlow<Boolean>()
-    var screenHeight by remember { mutableStateOf(0) }
 
-    var ballType by remember { mutableStateOf(AmplitudeBallType.Sine) }
-
-    // Easing
-//    val easingMap = getEasingMapWithNames()
-//    var selectedEasingIndex by remember { mutableStateOf(0) }
-
-    // AnimationSpec
-    val animationSpecEntries = CustomOffsetAnimationSpec.entries
-    var selectedAnimationSpecIndex by remember { mutableStateOf(0) }
 
     Column(modifier = modifier.padding(Grid.One)) {
         MusicReaderWrapper(
             fileUri = Res.getUri(musicFilePath),
             playOnLoad = false,
         ) { musicReader ->
-            val amplitude by musicReader.amplitude.collectAsStateWithLifecycle(0f)
+            val ballTypes = mapOf(
+                "Spring" to AmplitudeBallType.Spring,
+                "Tween" to AmplitudeBallType.Tween,
+                "Keyframes" to AmplitudeBallType.Keyframes,
+            )
 
-            val numberOfFrames = 5
-            val savedAmplitude by remember { mutableStateOf(FloatArray(numberOfFrames)) }
-            val animationDuration: Int = numberOfFrames * FRAME_DELAY_MILLIS.toInt()
+            val amplitudeFlow = if (UseDummyFlow) dummyAmplitudeFlow else musicReader.amplitude
+            val amplitude by amplitudeFlow.collectAsStateWithLifecycle(0f)
 
-            var counter by remember { mutableStateOf(0) }
-            LaunchedEffect(amplitude) {
-                savedAmplitude[counter % numberOfFrames] = amplitude
-                counter++
-            }
-            Column(
+
+            Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .onGloballyPositioned {
-                        screenHeight = it.size.height
-                    }
                     .musicPlayerControl(musicReader) {
                         coroutineScope.launch {
                             resetFlow.emit(true)
                         }
-                    }
+                    },
+                horizontalArrangement = spacedBy(Grid.Two)
             ) {
-                savedAmplitude.forEach { itemAmplitude ->
-                    val translationY by animateFloatAsState(
-                        targetValue = -itemAmplitude * screenHeight,
-                        animationSpec = keyframes {
-                            durationMillis = animationDuration
-                            0f atFraction .2f using LinearEasing
-                        }
-                    )
-
-                    Box(
-                        modifier = modifier
-                            .fillMaxSize()
-                            .padding(Grid.Two)
-                            .background(color = Color.Transparent)
-                    ) {
-
-                        Ball(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .graphicsLayer {
-                                    this.translationY = translationY
-                                }
+                ballTypes.forEach { ballEntry ->
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = Grid.One),
+                            text = ballEntry.key,
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.headlineMedium
                         )
+                        Box(Modifier.border(width = 1.dp, color = TileColor.LightGray)) {
+                            AmplitudeBallPhased(
+                                reset = resetFlow,
+                                numberOfBalls = numberOfBalls,
+                                amplitude = amplitude,
+                                ballType = ballEntry.value,
+                                changeAlpha = false,
+                                changeSize = false,
+                                changeColor = false,
+                                showBorder = true,
+                            )
+                        }
                     }
                 }
             }
         }
     }
 }
-

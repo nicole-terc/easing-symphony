@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
+import dev.nstv.easing.symphony.animationspec.easing.CustomCubicBezier
 import dev.nstv.easing.symphony.animationspec.easing.EaseInBounce
 import dev.nstv.easing.symphony.animationspec.easing.EaseOutBounce
 import dev.nstv.easing.symphony.animationspec.sineWaveSpec
@@ -52,6 +53,7 @@ enum class AmplitudeBallType {
     Keyframes,
     KeyframesWithBounce,
     Sine,
+    Sine_Bigger,
     Bounce,
     Restart;
 
@@ -229,6 +231,15 @@ fun AmplitudeBallContainer(
                 size = ballSize,
                 ballColor = ballColor,
                 durationInMillis = durationInMillis,
+            )
+
+            AmplitudeBallType.Sine_Bigger -> SineBall(
+                amplitude = amplitude,
+                screenHeight = screenHeight,
+                size = ballSize,
+                ballColor = ballColor,
+                durationInMillis = durationInMillis,
+                sineAmplitude = 40f,
             )
         }
 
@@ -418,10 +429,8 @@ fun BoxScope.BounceBallInvisibleBack(
     },
 ) {
     val alpha = remember { Animatable(1f) }
-
     val targetOffset = Offset(0f, -amplitude * screenHeight)
     val translation = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
-
 
     LaunchedEffect(amplitude) {
         translation.snapTo(Offset.Zero)
@@ -430,7 +439,7 @@ fun BoxScope.BounceBallInvisibleBack(
             translation.animateTo(targetOffset, offsetAnimationSpec(durationInMillis))
         }
         launch {
-            alpha.animateTo(0f, tween(durationInMillis, easing = LinearEasing))
+            alpha.animateTo(0.1f, tween(durationInMillis, easing = CustomCubicBezier))
         }
     }
 
@@ -495,11 +504,17 @@ fun BoxScope.SineBall(
     ballColor: Color = TileColor.Blue,
     durationInMillis: Int = AMPLITUDE_ANIMATION_DURATION,
     modifier: Modifier = Modifier,
+    sineAmplitude: Float = 20f,
+    waveCount: Int = 3
 ) {
     val targetOffset = Offset(0f, -amplitude * screenHeight)
     val translation by animateOffsetAsState(
-        targetOffset,
-        animationSpec = sineWaveSpec(durationMillis = durationInMillis)
+        targetValue = targetOffset,
+        animationSpec = sineWaveSpec(
+            durationMillis = durationInMillis,
+            waveCount = waveCount,
+            amplitude = sineAmplitude,
+        )
     )
 
     Ball(

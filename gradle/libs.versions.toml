@@ -1,7 +1,7 @@
 [versions]
 agp = "8.9.2"
 android-compileSdk = "35"
-android-minSdk = "24"
+android-minSdk = "25"
 android-targetSdk = "35"
 androidx-activityCompose = "1.10.1"
 androidx-appcompat = "1.7.0"
@@ -19,6 +19,7 @@ kotlinx-coroutines = "1.10.2"
 uiAndroid = "1.8.1"
 uiGeometryAndroid = "1.8.1"
 multiplatformSettings = "1.0.0"
+composableSheep = "1.1.0"
 
 [libraries]
 commons-math3 = { module = "org.apache.commons:commons-math3", version.ref = "commonsMath3" }
@@ -39,6 +40,8 @@ androidx-ui-android = { group = "androidx.compose.ui", name = "ui-android", vers
 androidx-ui-geometry-android = { group = "androidx.compose.ui", name = "ui-geometry-android", version.ref = "uiGeometryAndroid" }
 multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatformSettings" }
 multiplatform-settings-noarg = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatformSettings" }
+composableSheep = { module = "dev.nstv:composablesheep", version.ref = "composableSheep" }
+
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

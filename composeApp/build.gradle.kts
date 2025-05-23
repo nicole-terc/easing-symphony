@@ -52,6 +52,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.multiplatform.settings)
             implementation(libs.multiplatform.settings.noarg)
+            implementation(libs.composableSheep)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

@@ -14,7 +14,7 @@ object SettingsKeys {
 }
 
 val hardcodedPhoneSize = DpSize(450.dp, 900.dp)
-val hardcodedSlidesSize = DpSize(1800.dp, 900.dp)
+val hardcodedSlidesSize = DpSize(1200.dp, 700.dp)
 
 class SettingsRepository {
     private val settings: Settings by lazy { Settings() }

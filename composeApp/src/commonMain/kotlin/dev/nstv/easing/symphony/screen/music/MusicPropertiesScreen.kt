@@ -35,7 +35,7 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
-const val amplitudeScale = 10f
+private const val amplitudeScale = 10f
 
 // Current implementation is not-optimized
 const val showAccumulatedWaveform = false

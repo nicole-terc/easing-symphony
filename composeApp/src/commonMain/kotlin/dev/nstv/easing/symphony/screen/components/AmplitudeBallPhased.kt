@@ -14,6 +14,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.nstv.easing.symphony.design.Grid
 import dev.nstv.easing.symphony.design.TileColor
@@ -26,8 +28,11 @@ import kotlinx.coroutines.flow.flowOf
 import kotlin.math.ceil
 import kotlin.math.min
 
+private const val DEFAULT_ALPHA = 0.6f
+
 @Composable
 fun AmplitudeBallPhased(
+    modifier: Modifier = Modifier,
     amplitude: Float,
     ballType: AmplitudeBallType,
     easing: Easing = LinearEasing,
@@ -36,6 +41,11 @@ fun AmplitudeBallPhased(
     changeColor: Boolean = false,
     changeAlpha: Boolean = false,
     changeSize: Boolean = false,
+    showBorder: Boolean = false,
+    changeByAmplitude: Boolean = false,
+    changeByEasing: Boolean = false,
+    ballColors: Pair<Color, Color> = Pair(TileColor.Blue, TileColor.Blue),
+    ballSizes: Pair<Dp, Dp> = Pair(Grid.Three, Grid.Ten),
     reset: Flow<Boolean> = flowOf(),
     offsetAnimationSpec: (durationInMillis: Int) -> AnimationSpec<Offset> = { duration ->
         tween(
@@ -61,38 +71,66 @@ fun AmplitudeBallPhased(
         counter++
         savedAmplitude[counter % numberOfBalls] = amplitude
     }
+    val actualModifier = if (showBorder) {
+        modifier.border(1.dp, TileColor.Blue)
+    } else {
+        modifier
+    }
 
-    Box(Modifier.border(width = 1.dp, color = TileColor.LightGray)) {
+    fun getPercentage(itemAmplitude: Float, index: Int) = when {
+        changeByEasing -> 1f - easing.transform(itemAmplitude)
+        changeByAmplitude -> 1f - itemAmplitude
+        showOnlyOneBall -> 1f
+        else -> 1f - index.toFloat() / numberOfBalls
+    }
+
+    Box(actualModifier) {
         if (showOnlyOneBall) {
             val index = min(ceil(numberOfBalls / 2f).toInt(), numberOfBalls - 1)
             val itemAmplitude = savedAmplitude[index]
-            val percentage = 1f
+            val percentage = getPercentage(itemAmplitude, index)
             AmplitudeBallContainer(
                 amplitude = itemAmplitude,
                 easing = easing,
                 amplitudeBallType = ballType,
-                ballSize = if (changeSize) getSizeForPercentage(percentage) else Grid.Ten,
-                ballColor = if (changeColor) getColorForPercentage(percentage).copy(
+                ballSize = if (changeSize) getSizeForPercentage(
+                    percentage = percentage,
+                    minSize = ballSizes.first,
+                    maxSize = ballSizes.second,
+                ) else ballSizes.second,
+                ballColor = if (changeColor) getColorForPercentage(
+                    percentage = percentage,
+                    minColor = ballColors.first,
+                    maxColor = ballColors.second
+                ).copy(
                     alpha = if (changeAlpha) getAlphaForPercentage(
-                        percentage
-                    ) else 0.8f
-                ) else TileColor.Blue.copy(0.8f),
+                        percentage = percentage
+                    ) else DEFAULT_ALPHA
+                ) else ballColors.first.copy(DEFAULT_ALPHA),
                 durationInMillis = animationDuration,
                 offsetAnimationSpec = offsetAnimationSpec,
             )
         } else {
             savedAmplitude.forEachIndexed { index, itemAmplitude ->
-                val percentage = 1f - index.toFloat() / numberOfBalls
+                val percentage = getPercentage(itemAmplitude, index)
                 AmplitudeBallContainer(
                     amplitude = itemAmplitude,
                     easing = easing,
                     amplitudeBallType = ballType,
-                    ballSize = if (changeSize) getSizeForPercentage(percentage) else Grid.Ten,
-                    ballColor = if (changeColor) getColorForPercentage(percentage).copy(
+                    ballSize = if (changeSize) getSizeForPercentage(
+                        percentage = percentage,
+                        minSize = ballSizes.first,
+                        maxSize = ballSizes.second,
+                    ) else ballSizes.second,
+                    ballColor = if (changeColor) getColorForPercentage(
+                        percentage = percentage,
+                        minColor = ballColors.first,
+                        maxColor = ballColors.second
+                    ).copy(
                         alpha = if (changeAlpha) getAlphaForPercentage(
-                            percentage
-                        ) else 0.8f
-                    ) else TileColor.Blue.copy(0.8f),
+                            percentage = percentage
+                        ) else DEFAULT_ALPHA
+                    ) else ballColors.first.copy(DEFAULT_ALPHA),
                     durationInMillis = animationDuration,
                     offsetAnimationSpec = offsetAnimationSpec,
                 )

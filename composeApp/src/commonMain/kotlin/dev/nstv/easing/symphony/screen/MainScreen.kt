@@ -19,13 +19,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color.Companion
-import dev.nstv.easing.symphony.design.components.DropDownWithArrows
 import dev.nstv.easing.symphony.design.Grid
+import dev.nstv.easing.symphony.design.components.DropDownWithArrows
 import dev.nstv.easing.symphony.design.slidesBackground
 import dev.nstv.easing.symphony.screen.Screen.*
 import dev.nstv.easing.symphony.screen.animationspec.AnimationSpecScreen
 import dev.nstv.easing.symphony.screen.animationspec.EasingScreen
-import dev.nstv.easing.symphony.screen.showcase.EasingShowcaseScreen
 import dev.nstv.easing.symphony.screen.animationspec.OffsetAnimationSpecScreen
 import dev.nstv.easing.symphony.screen.`fun`.LogSpiralScreen
 import dev.nstv.easing.symphony.screen.music.AdvancedAmplitudeVisualizersScreen
@@ -34,9 +33,13 @@ import dev.nstv.easing.symphony.screen.music.BurstMusicVisualizerScreen
 import dev.nstv.easing.symphony.screen.music.MusicPropertiesScreen
 import dev.nstv.easing.symphony.screen.music.SimpleMusicVisualizerScreen
 import dev.nstv.easing.symphony.screen.music.TheMusicVisualizer
-import dev.nstv.easing.symphony.screen.music.TheMusicVisualizerPartOne
+import dev.nstv.easing.symphony.screen.music.TheMusicVisualizerPartFour
 import dev.nstv.easing.symphony.screen.showcase.AnimationSpecEasingShowcaseScreen
 import dev.nstv.easing.symphony.screen.showcase.AnimationSpecShowcaseScreen
+import dev.nstv.easing.symphony.screen.showcase.EasingShowcaseScreen
+import dev.nstv.easing.symphony.screen.music.TheMusicVisualizerPartOne
+import dev.nstv.easing.symphony.screen.music.TheMusicVisualizerPartThree
+import dev.nstv.easing.symphony.screen.music.TheMusicVisualizerPartTwo
 
 
 private enum class Screen {
@@ -54,19 +57,23 @@ private enum class Screen {
     SHOWCASE_AMPLITUDE_EASING,
     THE_MUSIC_VISUALIZER,
     VISUALIZER_PART_1,
+    VISUALIZER_PART_2,
+    VISUALIZER_PART_3,
+    VISUALIZER_PART_4,
 }
 
 const val musicFileName = "nicmix.wav"
 const val musicFilePath = "files/$musicFileName"
-const val UseSlidesBackground = false
-const val HideOptions = false
+const val UseSlidesBackground = true
+const val HideOptions = true
+const val SheepIt = true
 
 @Composable
 fun MainScreen(modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
     ) {
-        var selectedScreen by remember { mutableStateOf(VISUALIZER_PART_1) }
+        var selectedScreen by remember { mutableStateOf(VISUALIZER_PART_4) }
 
         Column(
             modifier = Modifier
@@ -105,6 +112,9 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     SHOWCASE_AMPLITUDE_EASING -> AnimationSpecEasingShowcaseScreen()
                     THE_MUSIC_VISUALIZER -> TheMusicVisualizer()
                     VISUALIZER_PART_1 -> TheMusicVisualizerPartOne()
+                    VISUALIZER_PART_2 -> TheMusicVisualizerPartTwo()
+                    VISUALIZER_PART_3 -> TheMusicVisualizerPartThree()
+                    VISUALIZER_PART_4 -> TheMusicVisualizerPartFour()
                 }
             }
         }

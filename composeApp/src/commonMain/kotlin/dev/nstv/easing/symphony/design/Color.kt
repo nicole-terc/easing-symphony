@@ -2,7 +2,7 @@ package dev.nstv.easing.symphony.design
 
 import androidx.compose.ui.graphics.Color
 
-val slidesBackground = Color(0xFF4285f4)
+val slidesBackground = Color(0xFFFFFFFF)
 
 object TileColor {
     val Blue = Color(0xFF00A2FF)

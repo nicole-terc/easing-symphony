@@ -116,6 +116,7 @@ fun TheMusicVisualizer(
                     changeSize = changeSize,
                     changeAlpha = changeAlpha,
                     changeColor = changeColor,
+                    showBorder = true,
                     offsetAnimationSpec = { duration ->
                         animationSpecEntries[selectedAnimationSpecIndex].toAnimationSpec(duration)
                     }
