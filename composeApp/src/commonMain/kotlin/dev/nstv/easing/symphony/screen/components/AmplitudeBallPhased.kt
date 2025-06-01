@@ -44,6 +44,7 @@ fun AmplitudeBallPhased(
     showBorder: Boolean = false,
     changeByAmplitude: Boolean = false,
     changeByEasing: Boolean = false,
+    sheepIt: Boolean = false,
     ballColors: Pair<Color, Color> = Pair(TileColor.Blue, TileColor.Blue),
     ballSizes: Pair<Dp, Dp> = Pair(Grid.Three, Grid.Ten),
     reset: Flow<Boolean> = flowOf(),
@@ -59,17 +60,17 @@ fun AmplitudeBallPhased(
 
     var counter by remember { mutableStateOf(0) }
 
+    LaunchedEffect(amplitude) {
+        counter++
+        savedAmplitude[counter % numberOfBalls] = amplitude
+    }
+
     LaunchedEffect(reset) {
         reset.collect {
             if (it) {
                 savedAmplitude.fill(0f)
             }
         }
-    }
-
-    LaunchedEffect(amplitude) {
-        counter++
-        savedAmplitude[counter % numberOfBalls] = amplitude
     }
     val actualModifier = if (showBorder) {
         modifier.border(1.dp, TileColor.Blue)
@@ -109,6 +110,7 @@ fun AmplitudeBallPhased(
                 ) else ballColors.first.copy(DEFAULT_ALPHA),
                 durationInMillis = animationDuration,
                 offsetAnimationSpec = offsetAnimationSpec,
+                sheepIt = sheepIt,
             )
         } else {
             savedAmplitude.forEachIndexed { index, itemAmplitude ->
@@ -133,6 +135,7 @@ fun AmplitudeBallPhased(
                     ) else ballColors.first.copy(DEFAULT_ALPHA),
                     durationInMillis = animationDuration,
                     offsetAnimationSpec = offsetAnimationSpec,
+                    sheepIt = sheepIt,
                 )
             }
         }

@@ -56,6 +56,7 @@ fun PhasedMultipleAmplitudeBalls(
     changeAlpha: Boolean = false,
     changeByAmplitude: Boolean = false,
     changeByEasing: Boolean = false,
+    sheepIt: Boolean = false,
 ) {
     Row(
         modifier = modifier
@@ -77,6 +78,7 @@ fun PhasedMultipleAmplitudeBalls(
                     ballSizes = ballSizes,
                     changeByAmplitude = changeByAmplitude,
                     changeByEasing = changeByEasing,
+                    sheepIt = sheepIt,
                 )
             }
         }

@@ -104,6 +104,7 @@ fun AmplitudeBallContainer(
     ballSize: Dp = Grid.Ten,
     ballColor: Color = TileColor.Blue,
     durationInMillis: Int = AMPLITUDE_ANIMATION_DURATION,
+    sheepIt: Boolean = false,
     offsetAnimationSpec: (durationInMillis: Int) -> AnimationSpec<Offset> = { duration ->
         tween(
             durationMillis = duration,
@@ -231,6 +232,7 @@ fun AmplitudeBallContainer(
                 size = ballSize,
                 ballColor = ballColor,
                 durationInMillis = durationInMillis,
+                sheepIt = sheepIt,
             )
 
             AmplitudeBallType.Sine_Bigger -> SineBall(
@@ -240,6 +242,7 @@ fun AmplitudeBallContainer(
                 ballColor = ballColor,
                 durationInMillis = durationInMillis,
                 sineAmplitude = 40f,
+                sheepIt = sheepIt,
             )
         }
 
@@ -465,6 +468,7 @@ fun BoxScope.BounceBall(
     ballColor: Color = TileColor.Blue,
     durationInMillis: Int = AMPLITUDE_ANIMATION_DURATION,
     modifier: Modifier = Modifier,
+    sheepIt: Boolean = false,
     offsetAnimationSpec: (durationInMillis: Int) -> AnimationSpec<Offset> = { duration ->
         tween(
             durationMillis = duration,
@@ -487,6 +491,7 @@ fun BoxScope.BounceBall(
     Ball(
         size = size,
         color = ballColor,
+        sheepIt = sheepIt,
         modifier = modifier
             .align(Alignment.BottomCenter)
             .graphicsLayer {
@@ -505,7 +510,8 @@ fun BoxScope.SineBall(
     durationInMillis: Int = AMPLITUDE_ANIMATION_DURATION,
     modifier: Modifier = Modifier,
     sineAmplitude: Float = 20f,
-    waveCount: Int = 3
+    waveCount: Int = 3,
+    sheepIt: Boolean = false,
 ) {
     val targetOffset = Offset(0f, -amplitude * screenHeight)
     val translation by animateOffsetAsState(
@@ -520,6 +526,7 @@ fun BoxScope.SineBall(
     Ball(
         size = size,
         color = ballColor,
+        sheepIt = sheepIt,
         modifier = modifier
             .align(Alignment.BottomCenter)
             .graphicsLayer {

@@ -30,8 +30,9 @@ fun Ball(
     modifier: Modifier = Modifier,
     size: Dp = Grid.Five,
     color: Color = TileColor.Blue,
+    sheepIt: Boolean = SheepIt
 ) {
-    if (SheepIt) {
+    if (sheepIt) {
         ComposableSheep(
             modifier = modifier
                 .size(size * 1.5f + 2.dp)

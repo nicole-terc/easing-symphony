@@ -168,6 +168,7 @@ fun TheMusicVisualizerPartFour(
                         modifier = Modifier.graphicsLayer {
                             rotationZ = 180f
 //                            rotationY = 180f
+                            alpha = 0.5f
                         },
                         amplitude = amplitude,
                         numberOfBalls = numberOfBalls,
@@ -182,6 +183,9 @@ fun TheMusicVisualizerPartFour(
                     )
 
                     PhasedMultipleAmplitudeBalls(
+                        modifier = Modifier.graphicsLayer {
+                            alpha = 0.5f
+                        },
                         amplitude = amplitude,
                         numberOfBalls = numberOfBalls,
                         easings = easings,
@@ -205,6 +209,7 @@ fun TheMusicVisualizerPartFour(
                         ballColors = TileColor.Purple to TileColor.Green,
                         changeColor = changeColor,
                         changeSize = changeSize,
+                        sheepIt = true,
 //                        changeAlpha = changeAlpha,
                     )
 

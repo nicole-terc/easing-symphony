@@ -65,8 +65,8 @@ private enum class Screen {
 const val musicFileName = "nicmix.wav"
 const val musicFilePath = "files/$musicFileName"
 const val UseSlidesBackground = true
-const val HideOptions = true
-const val SheepIt = true
+const val HideOptions = false
+const val SheepIt = false
 
 @Composable
 fun MainScreen(modifier: Modifier = Modifier) {
